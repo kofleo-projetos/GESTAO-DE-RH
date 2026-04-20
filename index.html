@@ -227,7 +227,23 @@
   .sb-sel option{background:#1e1b4b;color:#e0e7ff}
   .sb-filter-badge{display:inline-flex;align-items:center;gap:4px;background:rgba(99,102,241,.3);border:1px solid rgba(99,102,241,.5);color:#c7d2fe;font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;margin-bottom:10px;width:100%;justify-content:center}
 
-  /* Firebase status indicator */
+  .folha-mode-btn.mode-vrvt.active{border-color:#6366f1;color:#3730a3;background:#e0e7ff}
+  /* Modal VR/VT em Pagamentos */
+  .mo-vrvt-inner{background:var(--card);border-radius:18px;padding:28px;max-width:1100px;width:96%;max-height:92vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.25)}
+  .enc-inline-table{width:100%;border-collapse:collapse;margin-top:4px}
+  .enc-inline-table th{background:#f8fafc;padding:9px 12px;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;text-align:left}
+  .enc-inline-table td{padding:10px 12px;border-top:1px solid var(--border);font-size:13px;vertical-align:middle}
+  .enc-inline-table tr:hover td{background:#f8fafc}
+  .enc-row-total{font-weight:800;color:var(--primary)}
+  /* Encargos inline table */
+  .enc-bulk-table{width:100%;border-collapse:collapse}
+  .enc-bulk-table th{background:#f8fafc;padding:9px 10px;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;text-align:left;white-space:nowrap}
+  .enc-bulk-table td{padding:9px 10px;border-top:1px solid var(--border);font-size:12px;vertical-align:middle}
+  .enc-bulk-table tr:hover td{background:#fafafa}
+  .enc-bulk-table input[type=number]{width:90px;padding:5px 8px;border:1.5px solid var(--border);border-radius:7px;font-size:12px;outline:none;background:var(--bg);transition:border .2s}
+  .enc-bulk-table input[type=number]:focus{border-color:var(--primary);background:#fff}
+  .enc-bulk-input-zero{color:var(--muted)}
+  .enc-bulk-row-total{font-weight:800;color:#6366f1;white-space:nowrap}
   #fb-status{display:flex;align-items:center;gap:5px;font-size:10px;padding:3px 8px;border-radius:20px;font-weight:700}
   #fb-status.online{background:#d1fae5;color:#065f46}
   #fb-status.offline{background:#fee2e2;color:#991b1b}
@@ -388,14 +404,12 @@
     <div class="ni" onclick="showTab('funcionarios',this)">
       <span class="ic"><svg viewBox="0 0 24 24"><circle cx="9" cy="7" r="3.5"/><path d="M2 21v-1.5A5.5 5.5 0 0 1 7.5 14h3A5.5 5.5 0 0 1 16 19.5V21"/><circle cx="18" cy="8" r="2.5"/><path d="M18 13.5c2.485 0 4.5 1.79 4.5 4V21"/></svg></span><span>Funcionários</span>
     </div>
-    <div class="ni" onclick="showTab('calculo',this)">
-      <span class="ic"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M7 8h2m2 0h6"/><path d="M7 12h10"/><path d="M7 16h4"/><circle cx="17" cy="16" r="1.5" fill="currentColor" stroke="none"/></svg></span><span>Cálculo para pagamento</span>
-    </div>
+    
     <div class="ni" onclick="showTab('lancamentos',this)">
       <span class="ic"><svg viewBox="0 0 24 24"><path d="M9 11l3 3 8-8"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></span><span>Lançamentos</span>
     </div>
     <div class="ni" onclick="showTab('folha',this)">
-      <span class="ic"><svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 8h2"/><path d="M7 12h2"/><path d="M11 8h6"/><path d="M11 12h6"/></svg></span><span>Folha de Pagamento</span>
+      <span class="ic"><svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 8h2"/><path d="M7 12h2"/><path d="M11 8h6"/><path d="M11 12h6"/></svg></span><span>Pagamentos</span>
     </div>
     <div class="ni" onclick="showTab('ferias',this)">
       <span class="ic"><svg viewBox="0 0 24 24"><path d="M17 18a5 5 0 0 0-10 0"/><line x1="12" y1="2" x2="12" y2="9"/><line x1="4.22" y1="10.22" x2="5.64" y2="11.64"/><line x1="2" y1="18" x2="4" y2="18"/><line x1="20" y1="18" x2="22" y2="18"/><line x1="18.36" y1="11.64" x2="19.78" y2="10.22"/><line x1="23" y1="22" x2="1" y2="22"/><polyline points="8 6 12 2 16 6"/></svg></span><span>Férias</span>
@@ -851,8 +865,12 @@
     <!-- FOLHA DE PAGAMENTO -->
     <div id="tab-folha" class="tab">
       <div class="cfg-card">
-        <h3>💼 Modo da Folha de Pagamento</h3>
+        <h3>💼 Modo de Pagamento</h3>
         <div class="folha-modes">
+          <button class="folha-mode-btn mode-vrvt" onclick="setFolhaMode('vrvt',this)">
+            <svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M7 8h2m2 0h6"/><path d="M7 12h10"/><path d="M7 16h4"/><circle cx="17" cy="16" r="1.5" fill="currentColor" stroke="none"/></svg>
+            🍽️ VR e VT
+          </button>
           <button class="folha-mode-btn mode-5du active" onclick="setFolhaMode('5du',this)">
             <svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
             📅 5º Dia Útil
@@ -1024,78 +1042,93 @@
         </div>
       </div>
 
-      <!-- Formulário de novo lançamento -->
+      <!-- ═══ NOVO LANÇAMENTO EM MASSA (tabela inline) ═══ -->
       <div class="cfg-card">
-        <h3 id="enc-form-title">➕ Novo Lançamento de Encargo</h3>
-        <input type="hidden" id="enc-edit-id">
-        <div class="enc-form-grid" style="margin-top:14px">
-          <div class="enc-fg" style="grid-column:span 2">
-            <label>Funcionário *</label>
-            <select id="enc-func" style="width:100%">
-              <option value="">Selecione o funcionário...</option>
-            </select>
-          </div>
-          <div class="enc-fg">
-            <label>Mês de Referência</label>
-            <select id="enc-mes">
-              <option value="1">Janeiro</option><option value="2">Fevereiro</option><option value="3">Março</option>
-              <option value="4">Abril</option><option value="5">Maio</option><option value="6">Junho</option>
-              <option value="7">Julho</option><option value="8">Agosto</option><option value="9">Setembro</option>
-              <option value="10">Outubro</option><option value="11">Novembro</option><option value="12">Dezembro</option>
-            </select>
-          </div>
-          <div class="enc-fg">
-            <label>Ano</label>
-            <select id="enc-ano">
-              <option>2024</option><option>2025</option><option selected>2026</option><option>2027</option>
-            </select>
-          </div>
-          <div class="enc-fg">
-            <label>FGTS (R$)</label>
-            <input type="number" id="enc-fgts" step="0.01" placeholder="0,00" oninput="calcEncTotal()">
-          </div>
-          <div class="enc-fg">
-            <label>INSS (R$)</label>
-            <input type="number" id="enc-inss" step="0.01" placeholder="0,00" oninput="calcEncTotal()">
-          </div>
-          <div class="enc-fg">
-            <label>Sindicato (R$)</label>
-            <input type="number" id="enc-sind" step="0.01" placeholder="0,00" oninput="calcEncTotal()">
-          </div>
-          <div class="enc-fg">
-            <label>Seguro (R$)</label>
-            <input type="number" id="enc-seg" step="0.01" placeholder="0,00" oninput="calcEncTotal()">
-          </div>
-          <div class="enc-fg">
-            <label>Pensão Alimentícia (R$)</label>
-            <input type="number" id="enc-pens" step="0.01" placeholder="0,00" oninput="calcEncTotal()">
-          </div>
-          <div class="enc-fg">
-            <label>Cesta Básica (R$)</label>
-            <input type="number" id="enc-cesta" step="0.01" placeholder="0,00" oninput="calcEncTotal()">
-          </div>
-          <div class="enc-fg" style="grid-column:span 2">
-            <label>Observações</label>
-            <input type="text" id="enc-obs" placeholder="Ex: Referente a competência Jan/2026...">
-          </div>
-        </div>
-        <div class="enc-total-row">
-          <div>
-            <div class="enc-total-lbl">Total do Lançamento</div>
-            <div class="enc-total-val" id="enc-total-preview">R$ 0,00</div>
-          </div>
-          <div style="display:flex;gap:8px">
-            <button class="btn bs sm" id="enc-cancel-btn" onclick="cancelEncEdit()" style="display:none">Cancelar</button>
-            <button class="btn bp sm" onclick="saveEncargo()">
-              <svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-              <span id="enc-save-lbl">Salvar Encargo</span>
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:14px">
+          <h3>➕ Lançamento de Encargos</h3>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+            <!-- Período -->
+            <div class="filter-group" style="gap:6px">
+              <svg style="width:13px;height:13px;stroke:#6366f1;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              <label style="font-size:11px;font-weight:700;color:var(--muted)">Mês</label>
+              <select id="enc-bulk-mes" class="fsel" onchange="renderEncBulk()" style="min-width:110px">
+                <option value="1">Janeiro</option><option value="2">Fevereiro</option><option value="3">Março</option>
+                <option value="4" selected>Abril</option><option value="5">Maio</option><option value="6">Junho</option>
+                <option value="7">Julho</option><option value="8">Agosto</option><option value="9">Setembro</option>
+                <option value="10">Outubro</option><option value="11">Novembro</option><option value="12">Dezembro</option>
+              </select>
+            </div>
+            <div class="filter-group" style="gap:6px">
+              <label style="font-size:11px;font-weight:700;color:var(--muted)">Ano</label>
+              <select id="enc-bulk-ano" class="fsel" onchange="renderEncBulk()">
+                <option>2024</option><option>2025</option><option selected>2026</option><option>2027</option>
+              </select>
+            </div>
+            <!-- Filtro por funcionário -->
+            <div class="filter-group" style="gap:6px">
+              <svg style="width:13px;height:13px;stroke:#6366f1;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              <label style="font-size:11px;font-weight:700;color:var(--muted)">Funcionário</label>
+              <select id="enc-bulk-func-filt" class="fsel" onchange="renderEncBulk()" style="min-width:180px">
+                <option value="">Todos</option>
+              </select>
+            </div>
+            <button class="btn bs sm" onclick="resetEncBulkDisplay()" title="Zera os campos visualmente sem afetar dados salvos">
+              <svg viewBox="0 0 24 24" style="width:14px;height:14px"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.96"/></svg> Limpar Campos
             </button>
           </div>
         </div>
+
+        <div class="alert ai" style="margin-bottom:12px;font-size:12px">ℹ️ Preencha os campos dos encargos de cada funcionário. Campos com <strong>zero</strong> são ignorados ao salvar. Use o filtro para lançar por funcionário específico.</div>
+
+        <div style="overflow-x:auto">
+          <table class="enc-bulk-table">
+            <thead>
+              <tr>
+                <th style="min-width:180px">Funcionário</th>
+                <th style="min-width:80px">Empresa</th>
+                <th style="min-width:95px;color:#dc2626">🏛️ FGTS</th>
+                <th style="min-width:95px;color:#7c3aed">🏥 INSS</th>
+                <th style="min-width:95px;color:#0369a1">🤝 Sindicato</th>
+                <th style="min-width:95px;color:#0891b2">🛡️ Seguro</th>
+                <th style="min-width:95px;color:#b45309">⚖️ Pensão</th>
+                <th style="min-width:95px;color:#15803d">🧺 Cesta</th>
+                <th style="min-width:130px">Observações</th>
+                <th style="min-width:90px;color:#6366f1">Total</th>
+              </tr>
+            </thead>
+            <tbody id="tb-enc-bulk">
+              <tr><td colspan="10"><div class="es"><div class="ei">📄</div><p>Carregando funcionários...</p></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="enc-total-row" style="margin-top:14px">
+          <div>
+            <div class="enc-total-lbl">Total do Lançamento em Tela</div>
+            <div class="enc-total-val" id="enc-bulk-total-preview">R$ 0,00</div>
+          </div>
+          <button class="btn bg" onclick="saveEncargoBulk()">
+            <svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+            Salvar Lançamentos
+          </button>
+        </div>
       </div>
 
+      <!-- hidden legacy inputs mantidos para compatibilidade com editEncargo -->
+      <input type="hidden" id="enc-edit-id">
+      <input type="hidden" id="enc-func">
+      <input type="hidden" id="enc-mes">
+      <input type="hidden" id="enc-ano">
+      <input type="hidden" id="enc-fgts">
+      <input type="hidden" id="enc-inss">
+      <input type="hidden" id="enc-sind">
+      <input type="hidden" id="enc-seg">
+      <input type="hidden" id="enc-pens">
+      <input type="hidden" id="enc-cesta">
+      <input type="hidden" id="enc-obs">
+
       <!-- Filtros e histórico -->
-      <div style="display:flex;justify-content:space-between;align-items:center;margin:20px 0 12px;flex-wrap:wrap;gap:10px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin:24px 0 12px;flex-wrap:wrap;gap:10px">
         <h3 style="font-size:15px;font-weight:700">📋 Histórico de Encargos</h3>
         <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
           <select id="enc-filt-mes" onchange="renderEncargos()" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:12px;outline:none;background:var(--bg)">
@@ -1711,6 +1744,74 @@
 </div>
 </div>
 
+<!-- MODAL VR e VT -->
+<div class="mo" id="mo-vrvt">
+  <div class="mo-vrvt-inner">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px">
+      <h3 style="font-size:18px;font-weight:800">🍽️ Cálculo VR e VT</h3>
+      <button class="btn bs sm" onclick="closeMo('mo-vrvt')"><svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Fechar</button>
+    </div>
+    <div class="cfg-card" style="margin-bottom:16px">
+      <h3 style="font-size:14px;font-weight:700;margin-bottom:14px">⚙️ Parâmetros do Cálculo</h3>
+      <div class="fg">
+        <div class="fgp"><label>Ano</label><select id="mvc-ano" onchange="renderVRVTModal()"><option>2025</option><option selected>2026</option><option>2027</option></select></div>
+        <div class="fgp"><label>Mês</label>
+          <select id="mvc-mes" onchange="renderVRVTModal()">
+            <option value="1">Janeiro</option><option value="2">Fevereiro</option><option value="3">Março</option>
+            <option value="4" selected>Abril</option><option value="5">Maio</option><option value="6">Junho</option>
+            <option value="7">Julho</option><option value="8">Agosto</option><option value="9">Setembro</option>
+            <option value="10">Outubro</option><option value="11">Novembro</option><option value="12">Dezembro</option>
+          </select>
+        </div>
+        <div class="fgp"><label>Valor Diário VR (R$)</label><input type="number" id="mvc-vr" value="26.60" step="0.01" oninput="renderVRVTModal()"></div>
+        <div class="fgp"><label>Valor Diário VT (R$)</label><input type="number" id="mvc-vt" value="11.00" step="0.01" oninput="renderVRVTModal()"></div>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px">
+        <div style="background:var(--primary-light);padding:8px 13px;border-radius:9px;font-size:12px">📅 <strong>Dias úteis (Adm):</strong> <span id="mvc-du">—</span></div>
+        <div style="background:#fce7f3;padding:8px 13px;border-radius:9px;font-size:12px">🗓️ <strong>Dias 6x1:</strong> <span id="mvc-d6x1">—</span></div>
+        <div style="background:var(--secondary-light);padding:8px 13px;border-radius:9px;font-size:12px">🔄 <strong>12/36 Ímpar:</strong> <span id="mvc-d12i">—</span> | <strong>Par:</strong> <span id="mvc-d12p">—</span></div>
+      </div>
+      <div class="alert aw" style="margin-top:12px;font-size:12px">⚠️ Funcionários com status <strong>Inativo</strong> ou <strong>Férias</strong> são excluídos automaticamente do cálculo de VT.</div>
+    </div>
+    <div class="filter-bar" style="margin-bottom:14px">
+      <div class="filter-group">
+        <svg style="width:14px;height:14px;stroke:#6366f1;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        <label>Empresa</label>
+        <select id="mvc-emp" class="fsel" onchange="renderVRVTModal()"><option value="">Todas</option></select>
+      </div>
+      <div class="filter-group">
+        <svg style="width:14px;height:14px;stroke:#6366f1;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <label>Funcionário</label>
+        <select id="mvc-func" class="fsel" onchange="renderVRVTModal()"><option value="">Todos</option></select>
+      </div>
+      <button class="btn bs sm" onclick="$('mvc-emp').value='';$('mvc-func').value='';renderVRVTModal()">
+        <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Limpar filtros
+      </button>
+      <button class="btn bs sm" style="background:#fffbeb;border:1.5px solid #f59e0b;color:#92400e" onclick="resetVRVTDisplay()" title="Zera visualmente os valores sem alterar o sistema — ao fechar/abrir volta ao normal">
+        <svg viewBox="0 0 24 24" style="width:14px;height:14px"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.96"/></svg> Limpar Valores
+      </button>
+      <div style="font-size:11px;color:var(--muted)" id="mvc-filter-info"></div>
+    </div>
+    <div class="tw" style="margin-bottom:14px">
+      <table>
+        <thead><tr><th>Funcionário</th><th>Empresa</th><th>Escala</th><th>Status</th><th>Dias VR</th><th>VR Total</th><th>Dias VT</th><th>VT Total</th><th>Total</th><th></th></tr></thead>
+        <tbody id="mvc-tbody"><tr><td colspan="10"><div class="es"><div class="ei">🧮</div><p>Selecione ano e mês para calcular</p></div></td></tr></tbody>
+      </table>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between">
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <div style="background:var(--success-light);padding:10px 16px;border-radius:10px;font-size:13px;display:flex;align-items:center;gap:7px">🍽️ VR: <strong id="mvc-t-vr">R$ 0,00</strong></div>
+        <div style="background:var(--secondary-light);padding:10px 16px;border-radius:10px;font-size:13px;display:flex;align-items:center;gap:7px">🚌 VT: <strong id="mvc-t-vt">R$ 0,00</strong></div>
+        <div style="background:var(--primary-light);padding:10px 16px;border-radius:10px;font-size:13px;display:flex;align-items:center;gap:7px">💰 Total: <strong id="mvc-t-ger">R$ 0,00</strong></div>
+      </div>
+      <button class="btn bg" onclick="salvarVRVTModal()">
+        <svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+        Salvar Lançamento
+      </button>
+    </div>
+  </div>
+</div>
+
 <script>
 // ─── SEED ─────────────────────────────────────────────────────────────────────
 const SEED_FUNCIONARIOS = [
@@ -1919,7 +2020,7 @@ window._initApp = function() {
   $('c-ano').value=now.getFullYear();
   if($('sb-ano')) $('sb-ano').value=now.getFullYear();
   const now2=new Date();$("fp-mes").value=now2.getMonth()+1;$("fp-ano").value=now2.getFullYear();
-  renderFunc(); updateDash(); fillCalcFilters(); fillLancFilters(); fillFolhaEmpFilter();
+  renderFunc(); updateDash(); fillCalcFilters(); fillLancFilters(); fillFolhaEmpFilter(); renderEncargos(); renderEncBulk();
 };
 
 // If Firebase hasn't called back in 4s, init from localStorage
@@ -1928,7 +2029,7 @@ setTimeout(()=>{
 }, 4000);
 
 // ─── NAVIGATION ───────────────────────────────────────────────────────────────
-const pTitles={dashboard:'📊 Dashboard',funcionarios:'👥 Funcionários',calculo:'🧮 Cálculo para pagamento',lancamentos:'📋 Lançamentos',folha:'💼 Folha de Pagamento',config:'⚙️ Configurações',ferias:'🏖️ Férias',encargos:'📄 Encargos',credito:'💳 Crédito Trabalhador',atestado:'🏥 Atestados'};
+const pTitles={dashboard:'📊 Dashboard',funcionarios:'👥 Funcionários',calculo:'🧮 Cálculo para pagamento',lancamentos:'📋 Lançamentos',folha:'💼 Pagamentos',config:'⚙️ Configurações',ferias:'🏖️ Férias',encargos:'📄 Encargos',credito:'💳 Crédito Trabalhador',atestado:'🏥 Atestados'};
 function showTab(t,el){
   document.querySelectorAll('.tab').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.ni').forEach(n=>n.classList.remove('active'));
@@ -1941,7 +2042,7 @@ function showTab(t,el){
   if(t==='folha'){fillFolhaEmpFilter();renderFolha();}
   if(t==='ferias'){fillFerEmpFilter();renderFerias();}
   if(t==='atestado'){renderAtestados();}
-  if(t==='encargos'){fillEncFuncSel();renderEncargos();}
+  if(t==='encargos'){fillEncFuncSel();renderEncargos();renderEncBulk();}
   if(t==='credito'){renderCredito();}
 }
 
@@ -2352,6 +2453,211 @@ async function salvarLanc(){
   toast(`${calcRows.length} lançamentos salvos para ${MESES[mes]}/${ano}!`);updateDash();
 }
 
+// ─── VR e VT MODAL (acessado pela aba Pagamentos) ─────────────────────────────
+let mvcRows = [];
+
+function openVRVTModal(){
+  // Sync VR/VT values from config
+  if($('mvc-vr')) $('mvc-vr').value = config.vr || 26.6;
+  if($('mvc-vt')) $('mvc-vt').value = config.vt || 11;
+  // Set current month/year
+  const now = new Date();
+  if($('mvc-ano')) $('mvc-ano').value = now.getFullYear();
+  if($('mvc-mes')) $('mvc-mes').value = now.getMonth()+1;
+  $('mo-vrvt').classList.add('open');
+  fillVRVTFilters();
+  renderVRVTModal();
+}
+
+function fillVRVTFilters(){
+  const empSel=$('mvc-emp'), funcSel=$('mvc-func');
+  if(!empSel||!funcSel) return;
+  const curEmp=empSel.value, curFunc=funcSel.value;
+  const ativos=funcionarios.filter(f=>(f.status||'ativo')==='ativo');
+  const empresas=[...new Set(ativos.map(f=>f.empresa).filter(Boolean))].sort();
+  empSel.innerHTML=`<option value="">Todas</option>`+empresas.map(e=>`<option value="${e}">${e}</option>`).join('');
+  empSel.value=curEmp;
+  const nomes=[...new Set(ativos.map(f=>f.nome))].sort();
+  funcSel.innerHTML=`<option value="">Todos</option>`+nomes.map(n=>`<option value="${n}">${n}</option>`).join('');
+  funcSel.value=curFunc;
+}
+
+function renderVRVTModal(){
+  fillVRVTFilters();
+  const ano=parseInt($('mvc-ano').value), mes=parseInt($('mvc-mes').value);
+  const vru=parseFloat($('mvc-vr').value)||config.vr;
+  const vtu=parseFloat($('mvc-vt').value)||config.vt;
+  const du=diasUteis(ano,mes), d6=dias6x1(ano,mes);
+  const d12imp=dias1236(ano,mes,'impar'), d12par=dias1236(ano,mes,'par');
+  if($('mvc-du')) $('mvc-du').textContent=du+' dias';
+  if($('mvc-d6x1')) $('mvc-d6x1').textContent=d6+' dias';
+  if($('mvc-d12i')) $('mvc-d12i').textContent=d12imp+' dias';
+  if($('mvc-d12p')) $('mvc-d12p').textContent=d12par+' dias';
+
+  const filtEmp=($('mvc-emp')||{}).value||'';
+  const filtFunc=($('mvc-func')||{}).value||'';
+
+  let lista=funcionarios.filter(f=>(f.status||'ativo')==='ativo').sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR'));
+  if(filtEmp) lista=lista.filter(f=>f.empresa===filtEmp);
+  if(filtFunc) lista=lista.filter(f=>f.nome===filtFunc);
+
+  const excluidos=funcionarios.filter(f=>f.status==='inativo'||f.status==='ferias').length;
+  if($('mvc-filter-info')) $('mvc-filter-info').innerHTML=excluidos?`<span style="color:#b45309;font-size:11px">⚠️ ${excluidos} excluído(s) por status</span>`:'';
+
+  if(!lista.length){
+    $('mvc-tbody').innerHTML=`<tr><td colspan="10"><div class="es"><div class="ei" style="font-size:36px">🔍</div><p>${funcionarios.length?'Nenhum funcionário ativo encontrado':'Cadastre funcionários primeiro'}</p></div></td></tr>`;
+    mvcRows=[];updVRVTTotals();return;
+  }
+
+  // Preserve manually-edited rows
+  const prevMap={};
+  mvcRows.forEach(r=>{ prevMap[r.func.id]={dVR:r.dVR,dVT:r.dVT,cleared:r.cleared}; });
+
+  mvcRows=lista.map(f=>{
+    if(prevMap[f.id]&&!prevMap[f.id].cleared){
+      const p=prevMap[f.id];
+      const rv=f.vr||vru, tv=f.vt||vtu;
+      return{func:f,dVR:p.dVR,dVT:p.dVT,vru:rv,vtu:tv,vr:p.dVR*rv,vt:p.dVT*tv,total:p.dVR*rv+p.dVT*tv,cleared:false};
+    }
+    if(prevMap[f.id]&&prevMap[f.id].cleared){
+      return{func:f,dVR:0,dVT:0,vru:f.vr||vru,vtu:f.vt||vtu,vr:0,vt:0,total:0,cleared:true};
+    }
+    let d;
+    if(f.escala==='1236'){const sub=subEscalaMes(f.sub1236||'par',mes,ano);d=dias1236(ano,mes,sub);}
+    else if(f.escala==='6x1'){d=d6;}
+    else{d=du;}
+    const rv=f.vr||vru, tv=f.vt||vtu;
+    const vrVal=f.semVR?0:d*rv;
+    const vtVal=f.semVT?0:d*tv;
+    return{func:f,dVR:f.semVR?0:d,dVT:f.semVT?0:d,vru:rv,vtu:tv,vr:vrVal,vt:vtVal,total:vrVal+vtVal,cleared:false};
+  });
+
+  $('mvc-tbody').innerHTML=mvcRows.map((r,i)=>{
+    let escalaBadge;
+    const mes2=mes,ano2=ano;
+    if(r.func.escala==='1236'){const sub=subEscalaMes(r.func.sub1236||'par',mes2,ano2);escalaBadge=`<span class="badge bam">12/36</span><span class="sub-tag ${sub==='par'?'bpar':'bimpar'}">${sub}</span>`;}
+    else if(r.func.escala==='6x1'){escalaBadge=`<span class="badge b6x1">6x1</span>`;}
+    else{escalaBadge=`<span class="badge bpu">Adm</span>`;}
+    const st=r.func.status||'ativo';
+    return `<tr>
+      <td><strong>${r.func.nome}</strong></td>
+      <td><span class="bemp">${r.func.empresa||'—'}</span></td>
+      <td>${escalaBadge}</td>
+      <td><span class="badge ${statusClass(st)}">${statusLabel(st)}</span></td>
+      <td><input type="number" value="${r.dVR}" min="0" max="31" style="width:52px;padding:3px 7px;border:1.5px solid var(--border);border-radius:7px;font-size:12px" onchange="updVRVTRow(${i},'vr',this.value)"></td>
+      <td id="mvcrvr${i}" style="color:var(--success);font-weight:700">${fmt(r.vr)}</td>
+      <td><input type="number" value="${r.dVT}" min="0" max="31" style="width:52px;padding:3px 7px;border:1.5px solid var(--border);border-radius:7px;font-size:12px" onchange="updVRVTRow(${i},'vt',this.value)"></td>
+      <td id="mvcrvt${i}" style="color:var(--secondary);font-weight:700">${fmt(r.vt)}</td>
+      <td id="mvcrtot${i}" style="font-weight:800">${fmt(r.total)}</td>
+      <td><button class="btn bs sm ic-btn" onclick="resetVRVTRow(${i})" title="Resetar dias"><svg viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.96"/></svg></button></td>
+    </tr>`;
+  }).join('');
+  updVRVTTotals();
+}
+
+function updVRVTRow(i,tipo,val){
+  const v=Math.max(0,parseInt(val)||0);
+  if(tipo==='vr'){mvcRows[i].dVR=v;mvcRows[i].vr=v*mvcRows[i].vru;}
+  else{mvcRows[i].dVT=v;mvcRows[i].vt=v*mvcRows[i].vtu;}
+  mvcRows[i].total=mvcRows[i].vr+mvcRows[i].vt;
+  mvcRows[i].cleared=false;
+  $(`mvcrvr${i}`).textContent=fmt(mvcRows[i].vr);
+  $(`mvcrvt${i}`).textContent=fmt(mvcRows[i].vt);
+  $(`mvcrtot${i}`).textContent=fmt(mvcRows[i].total);
+  updVRVTTotals();
+}
+
+function resetVRVTRow(i){
+  const ano=parseInt($('mvc-ano').value),mes=parseInt($('mvc-mes').value);
+  const f=mvcRows[i].func;
+  let d;
+  if(f.escala==='1236'){const sub=subEscalaMes(f.sub1236||'par',mes,ano);d=dias1236(ano,mes,sub);}
+  else if(f.escala==='6x1'){d=dias6x1(ano,mes);}
+  else{d=diasUteis(ano,mes);}
+  const rows=$('mvc-tbody').rows;
+  rows[i].cells[4].querySelector('input').value=d;
+  rows[i].cells[6].querySelector('input').value=d;
+  mvcRows[i].dVR=d;mvcRows[i].dVT=d;
+  mvcRows[i].vr=d*mvcRows[i].vru;mvcRows[i].vt=d*mvcRows[i].vtu;
+  mvcRows[i].total=mvcRows[i].vr+mvcRows[i].vt;
+  mvcRows[i].cleared=false;
+  $(`mvcrvr${i}`).textContent=fmt(mvcRows[i].vr);
+  $(`mvcrvt${i}`).textContent=fmt(mvcRows[i].vt);
+  $(`mvcrtot${i}`).textContent=fmt(mvcRows[i].total);
+  updVRVTTotals();
+}
+
+// Limpa visualmente os valores — só na tela, não salva nada, volta ao normal ao recalcular
+function resetVRVTDisplay(){
+  mvcRows.forEach((r,i)=>{
+    r.dVR=0;r.dVT=0;r.vr=0;r.vt=0;r.total=0;r.cleared=true;
+  });
+  const tbody=$('mvc-tbody');
+  if(!tbody)return;
+  Array.from(tbody.rows).forEach((tr,i)=>{
+    const ins=tr.querySelectorAll('input[type=number]');
+    if(ins[0])ins[0].value=0;
+    if(ins[1])ins[1].value=0;
+    if($(`mvcrvr${i}`))$(`mvcrvr${i}`).textContent=fmt(0);
+    if($(`mvcrvt${i}`))$(`mvcrvt${i}`).textContent=fmt(0);
+    if($(`mvcrtot${i}`))$(`mvcrtot${i}`).textContent=fmt(0);
+  });
+  updVRVTTotals();
+  toast('🧹 Valores limpos visualmente — clique em Recalcular para restaurar','w');
+}
+
+function updVRVTTotals(){
+  const tvr=mvcRows.reduce((s,r)=>s+r.vr,0);
+  const tvt=mvcRows.reduce((s,r)=>s+r.vt,0);
+  if($('mvc-t-vr'))$('mvc-t-vr').textContent=fmt(tvr);
+  if($('mvc-t-vt'))$('mvc-t-vt').textContent=fmt(tvt);
+  if($('mvc-t-ger'))$('mvc-t-ger').textContent=fmt(tvr+tvt);
+}
+
+async function salvarVRVTModal(){
+  if(!mvcRows.length){alert('Nenhum dado calculado!');return;}
+  const ano=parseInt($('mvc-ano').value),mes=parseInt($('mvc-mes').value);
+  const vruD=parseFloat($('mvc-vr').value)||config.vr;
+  const vtuD=parseFloat($('mvc-vt').value)||config.vt;
+
+  // Verifica duplicidade: funcionários que já têm lançamento VR/VT no mesmo mês/ano
+  const filtFunc=($('mvc-func')||{}).value||'';
+  const existentes=lancamentos.filter(l=>l.mes===mes&&l.ano===ano&&(!l.tipo||l.tipo==='vrvt'));
+
+  // Se há filtro de funcionário único, verifica apenas esse
+  if(filtFunc){
+    const jaExiste=existentes.find(l=>l.funcNome===filtFunc);
+    if(jaExiste){
+      if(!confirm(`⚠️ Já existe lançamento VR/VT para ${filtFunc} em ${MESES[mes]}/${ano}.\n\nDeseja substituir?`)) return;
+      // Remove só o registro desse funcionário
+      const toDelete=existentes.filter(l=>l.funcNome===filtFunc);
+      for(const l of toDelete){await fbDeleteLanc(l.id);}
+      lancamentos=lancamentos.filter(l=>!(l.mes===mes&&l.ano===ano&&(!l.tipo||l.tipo==='vrvt')&&l.funcNome===filtFunc));
+    }
+  } else {
+    // Sem filtro — verifica se há lançamentos do período completo
+    if(existentes.length){
+      if(!confirm(`⚠️ Já existem ${existentes.length} lançamento(s) VR/VT para ${MESES[mes]}/${ano}.\n\nDeseja substituir todos?`)) return;
+      for(const l of existentes){await fbDeleteLanc(l.id);}
+      lancamentos=lancamentos.filter(l=>!(l.mes===mes&&l.ano===ano&&(!l.tipo||l.tipo==='vrvt')));
+    }
+  }
+
+  const novos=mvcRows.filter(r=>r.total>0||r.dVR>0||r.dVT>0).map(r=>({
+    id:uid(),mes,ano,tipo:'vrvt',funcId:r.func.id,funcNome:r.func.nome,funcEscala:r.func.escala,funcEmp:r.func.empresa||'',
+    dVR:r.dVR,dVT:r.dVT,vru:vruD,vtu:vtuD,vr:r.vr,vt:r.vt,total:r.total
+  }));
+
+  if(!novos.length){alert('Nenhum valor maior que zero para salvar!');return;}
+
+  lancamentos.push(...novos);
+  lsL();
+  for(const l of novos){await fbSaveLanc(l);}
+  toast(`✅ ${novos.length} lançamento(s) VR/VT salvos — ${MESES[mes]}/${ano}!`,'g');
+  updateDash();
+}
+
+
 // ─── LANÇAMENTOS ──────────────────────────────────────────────────────────────
 let _lancTipoFilter='';
 function setTipoFilter(tipo,el){
@@ -2467,8 +2773,12 @@ let folhaRows=[];
 const FOLHA_MODO_LABELS={'5du':'📅 Folha — 5º Dia Útil','adt':'💰 Folha — Adiantamento','13':'🎁 Folha — Décimo Terceiro','fer':'🏖️ Folha — Férias','rec':'📄 Folha — Rescisão'};
 
 function setFolhaMode(mode,el){
+  if(mode==='vrvt'){
+    openVRVTModal();
+    return;
+  }
   folhaMode=mode;
-  folhaRows=[];// clear rows so switching mode starts fresh
+  folhaRows=[];
   document.querySelectorAll('.folha-mode-btn').forEach(b=>b.classList.remove('active'));
   if(el)el.classList.add('active');
   const titleEl=$('fp-title');if(titleEl)titleEl.textContent=FOLHA_MODO_LABELS[mode]||'Folha';
@@ -2953,21 +3263,14 @@ async function testarFirebase(){
 // ─── ENCARGOS ────────────────────────────────────────────────────────────────
 
 function fillEncFuncSel() {
-  const sel = $('enc-func'); if (!sel) return;
-  const cur = sel.value;
-  sel.innerHTML = '<option value="">Selecione o funcionário...</option>';
   const ativos = funcionarios.filter(f => (f.status||'ativo') !== 'inativo').sort((a,b) => a.nome.localeCompare(b.nome));
-  ativos.forEach(f => {
-    const o = document.createElement('option'); o.value = f.id;
-    o.textContent = f.nome + (f.empresa ? ' — ' + f.empresa : '');
-    if (f.id === cur) o.selected = true;
-    sel.appendChild(o);
-  });
-  // Also fill filter select
-  const fs = $('enc-filt-func'); if (!fs) return;
-  const cv = fs.value;
-  fs.innerHTML = '<option value="">Todos os funcionários</option>';
-  ativos.forEach(f => { const o = document.createElement('option'); o.value = f.id; o.textContent = f.nome; if(f.id===cv) o.selected=true; fs.appendChild(o); });
+  // Fill history filter
+  const fs = $('enc-filt-func');
+  if(fs){
+    const cv = fs.value;
+    fs.innerHTML = '<option value="">Todos os funcionários</option>';
+    ativos.forEach(f => { const o = document.createElement('option'); o.value = f.id; o.textContent = f.nome; if(f.id===cv) o.selected=true; fs.appendChild(o); });
+  }
 }
 
 function calcEncTotal() {
@@ -2978,60 +3281,182 @@ function calcEncTotal() {
 }
 
 function cancelEncEdit() {
-  $('enc-edit-id').value = '';
-  $('enc-form-title').textContent = '➕ Novo Lançamento de Encargo';
-  $('enc-save-lbl').textContent = 'Salvar Encargo';
-  $('enc-cancel-btn').style.display = 'none';
-  ['enc-fgts','enc-inss','enc-sind','enc-seg','enc-pens','enc-cesta','enc-obs'].forEach(id => { if($(id)) $(id).value=''; });
-  calcEncTotal();
+  if($('enc-edit-id')) $('enc-edit-id').value = '';
 }
 
+// Legacy saveEncargo kept for editEncargo compatibility (editar linha do histórico)
 async function saveEncargo() {
-  const funcId = $('enc-func').value;
-  if (!funcId) { alert('Selecione o funcionário!'); return; }
-  const f = funcionarios.find(x => x.id === funcId);
-  const mes = parseInt($('enc-mes').value);
-  const ano = parseInt($('enc-ano').value);
-  const fgts = parseFloat($('enc-fgts').value)||0;
-  const inss = parseFloat($('enc-inss').value)||0;
-  const sind = parseFloat($('enc-sind').value)||0;
-  const seg  = parseFloat($('enc-seg').value)||0;
-  const pens = parseFloat($('enc-pens').value)||0;
-  const cesta= parseFloat($('enc-cesta').value)||0;
-  const total = fgts+inss+sind+seg+pens+cesta;
-  if (total <= 0) { alert('Informe ao menos um valor!'); return; }
-  const obs = $('enc-obs').value.trim();
-  const editId = $('enc-edit-id').value;
-  const enc = { id: editId||uid(), funcId, funcNome: f.nome, funcEmp: f.empresa||'', mes, ano, fgts, inss, sind, seg, pens, cesta, total, obs };
-  if (editId) {
-    const idx = encargos.findIndex(e => e.id === editId);
-    if (idx>=0) encargos[idx] = enc; else encargos.push(enc);
-  } else { encargos.push(enc); }
+  // This is now only called when editing from history
+  const encId = $('enc-edit-id')?.value;
+  if(!encId){ return; }
+  const enc = encargos.find(e=>e.id===encId); if(!enc) return;
+  // The edit modal approach — open inline edit is now via history row editing
+}
+
+// ─── ENCARGOS BULK (tabela inline) ───────────────────────────────────────────
+let encBulkRows = []; // [{func, fgts, inss, sind, seg, pens, cesta, obs, cleared}]
+
+function fillEncBulkFuncFilter(){
+  const sel=$('enc-bulk-func-filt');if(!sel)return;
+  const cur=sel.value;
+  const ativos=funcionarios.filter(f=>(f.status||'ativo')==='ativo').sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR'));
+  sel.innerHTML=`<option value="">Todos</option>`+ativos.map(f=>`<option value="${f.id}">${f.nome}${f.empresa?' — '+f.empresa:''}</option>`).join('');
+  sel.value=cur;
+}
+
+function renderEncBulk(){
+  fillEncBulkFuncFilter();
+  const filtFunc=($('enc-bulk-func-filt')||{}).value||'';
+  let lista=funcionarios.filter(f=>(f.status||'ativo')==='ativo').sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR'));
+  if(filtFunc) lista=lista.filter(f=>f.id===filtFunc);
+
+  if(!lista.length){
+    $('tb-enc-bulk').innerHTML=`<tr><td colspan="10"><div class="es"><div class="ei">👤</div><p>Nenhum funcionário ativo encontrado</p></div></td></tr>`;
+    encBulkRows=[];updEncBulkTotal();return;
+  }
+
+  // Preserve previously entered values
+  const prevMap={};
+  encBulkRows.forEach(r=>prevMap[r.func.id]={fgts:r.fgts,inss:r.inss,sind:r.sind,seg:r.seg,pens:r.pens,cesta:r.cesta,obs:r.obs,cleared:r.cleared});
+
+  encBulkRows=lista.map(f=>{
+    if(prevMap[f.id]){const p=prevMap[f.id];return{func:f,...p};}
+    return{func:f,fgts:0,inss:0,sind:0,seg:0,pens:0,cesta:0,obs:'',cleared:false};
+  });
+
+  const FIELDS=['fgts','inss','sind','seg','pens','cesta'];
+  $('tb-enc-bulk').innerHTML=encBulkRows.map((r,i)=>{
+    const inp=(field,color)=>`<input type="number" value="${r[field]||0}" min="0" step="0.01"
+      style="width:90px;padding:5px 8px;border:1.5px solid var(--border);border-radius:7px;font-size:12px;outline:none;background:var(--bg);color:${r[field]>0?color:'inherit'};transition:border .2s"
+      oninput="updEncBulkRow(${i},'${field}',this.value,this)"
+      onfocus="this.style.borderColor='var(--primary)'"
+      onblur="this.style.borderColor='var(--border)'"
+      placeholder="0,00">`;
+    const rowTotal=FIELDS.reduce((s,f)=>s+(r[f]||0),0);
+    return `<tr>
+      <td><strong>${r.func.nome}</strong></td>
+      <td>${r.func.empresa?`<span class="bemp">${r.func.empresa}</span>`:'—'}</td>
+      <td>${inp('fgts','#dc2626')}</td>
+      <td>${inp('inss','#7c3aed')}</td>
+      <td>${inp('sind','#0369a1')}</td>
+      <td>${inp('seg','#0891b2')}</td>
+      <td>${inp('pens','#b45309')}</td>
+      <td>${inp('cesta','#15803d')}</td>
+      <td><input type="text" value="${r.obs||''}" placeholder="Observação..."
+        style="width:120px;padding:5px 8px;border:1.5px solid var(--border);border-radius:7px;font-size:12px;outline:none;background:var(--bg)"
+        oninput="encBulkRows[${i}].obs=this.value"></td>
+      <td class="enc-bulk-row-total" id="enc-bulk-rtot${i}">${rowTotal>0?fmt(rowTotal):'—'}</td>
+    </tr>`;
+  }).join('');
+  updEncBulkTotal();
+}
+
+function updEncBulkRow(i,field,val,el){
+  const v=Math.max(0,parseFloat(val)||0);
+  encBulkRows[i][field]=v;
+  const FIELDS=['fgts','inss','sind','seg','pens','cesta'];
+  const rowTotal=FIELDS.reduce((s,f)=>s+(encBulkRows[i][f]||0),0);
+  const colors={fgts:'#dc2626',inss:'#7c3aed',sind:'#0369a1',seg:'#0891b2',pens:'#b45309',cesta:'#15803d'};
+  if(el) el.style.color=v>0?colors[field]:'inherit';
+  const totEl=$(`enc-bulk-rtot${i}`);
+  if(totEl) totEl.textContent=rowTotal>0?fmt(rowTotal):'—';
+  updEncBulkTotal();
+}
+
+function updEncBulkTotal(){
+  const FIELDS=['fgts','inss','sind','seg','pens','cesta'];
+  const total=encBulkRows.reduce((s,r)=>s+FIELDS.reduce((a,f)=>a+(r[f]||0),0),0);
+  if($('enc-bulk-total-preview')) $('enc-bulk-total-preview').textContent=fmt(total);
+}
+
+function resetEncBulkDisplay(){
+  encBulkRows.forEach((r,i)=>{
+    r.fgts=0;r.inss=0;r.sind=0;r.seg=0;r.pens=0;r.cesta=0;r.obs='';r.cleared=true;
+  });
+  // Re-render to reset all inputs
+  const mes=parseInt($('enc-bulk-mes')?.value)||new Date().getMonth()+1;
+  const ano=parseInt($('enc-bulk-ano')?.value)||new Date().getFullYear();
+  renderEncBulk();
+  toast('🧹 Campos limpos visualmente — os dados salvos não foram alterados','w');
+}
+
+async function saveEncargoBulk(){
+  const FIELDS=['fgts','inss','sind','seg','pens','cesta'];
+  const mes=parseInt($('enc-bulk-mes')?.value)||new Date().getMonth()+1;
+  const ano=parseInt($('enc-bulk-ano')?.value)||new Date().getFullYear();
+
+  const comValores=encBulkRows.filter(r=>FIELDS.some(f=>(r[f]||0)>0));
+  if(!comValores.length){alert('Preencha ao menos um valor de encargo antes de salvar!');return;}
+
+  // Para cada funcionário com valor, verificar duplicidade (mesmo func + mês/ano)
+  let substituir=null;
+  for(const r of comValores){
+    const jaExiste=encargos.find(e=>e.funcId===r.func.id&&e.mes===mes&&e.ano===ano);
+    if(jaExiste){
+      if(substituir===null){
+        substituir=confirm(`⚠️ Já existem encargos lançados para um ou mais funcionários em ${MESES[mes]}/${ano}.\n\nDeseja substituir os registros existentes?`);
+        if(!substituir) return;
+      }
+      break;
+    }
+  }
+
+  let salvos=0;
+  for(const r of comValores){
+    const funcId=r.func.id;
+    const f=r.func;
+    const fgts=r.fgts||0,inss=r.inss||0,sind=r.sind||0,seg=r.seg||0,pens=r.pens||0,cesta=r.cesta||0;
+    const total=fgts+inss+sind+seg+pens+cesta;
+    const obs=r.obs||'';
+
+    // Remove duplicata se existe
+    const existIdx=encargos.findIndex(e=>e.funcId===funcId&&e.mes===mes&&e.ano===ano);
+    if(existIdx>=0){
+      await fbDeleteEnc(encargos[existIdx].id);
+      encargos.splice(existIdx,1);
+    }
+
+    const enc={id:uid(),funcId,funcNome:f.nome,funcEmp:f.empresa||'',mes,ano,fgts,inss,sind,seg,pens,cesta,total,obs};
+    encargos.push(enc);
+    await fbSaveEnc(enc);
+    salvos++;
+  }
   lsE();
-  const fbOkEnc = await fbSaveEnc(enc);
-  cancelEncEdit(); renderEncargos(); updateDash();
-  toast(fbOkEnc ? '✅ Encargo salvo no Firebase!' : '💾 Salvo localmente (Firebase indisponível)', fbOkEnc ? 'g' : 'w');
+  renderEncargos();updateDash();
+  // Limpar campos após salvar
+  encBulkRows.forEach(r=>{r.fgts=0;r.inss=0;r.sind=0;r.seg=0;r.pens=0;r.cesta=0;r.obs='';r.cleared=false;});
+  renderEncBulk();
+  toast(`✅ ${salvos} encargo(s) salvos — ${MESES[mes]}/${ano}!`,'g');
 }
 
 function editEncargo(id) {
   const e = encargos.find(x => x.id === id); if (!e) return;
-  $('enc-edit-id').value = e.id;
-  $('enc-func').value = e.funcId;
-  $('enc-mes').value = e.mes;
-  $('enc-ano').value = e.ano;
-  $('enc-fgts').value = e.fgts||0;
-  $('enc-inss').value = e.inss||0;
-  $('enc-sind').value = e.sind||0;
-  $('enc-seg').value  = e.seg||0;
-  $('enc-pens').value = e.pens||0;
-  $('enc-cesta').value= e.cesta||0;
-  $('enc-obs').value  = e.obs||'';
-  calcEncTotal();
-  $('enc-form-title').textContent = '✏️ Editar Encargo';
-  $('enc-save-lbl').textContent = 'Atualizar';
-  $('enc-cancel-btn').style.display = 'inline-flex';
-  $('tab-encargos').scrollIntoView({behavior:'smooth',block:'start'});
+  // Abrir encargos tab e preencher bulk para o funcionário específico
+  showTab('encargos', document.querySelector('.ni[onclick*="encargos"]'));
+  // Selecionar o mês/ano no bulk
+  if($('enc-bulk-mes')) $('enc-bulk-mes').value=e.mes;
+  if($('enc-bulk-ano')) $('enc-bulk-ano').value=e.ano;
+  if($('enc-bulk-func-filt')) $('enc-bulk-func-filt').value=e.funcId;
+  renderEncBulk();
+  // Preencher os valores do encargo na linha do funcionário
+  const idx=encBulkRows.findIndex(r=>r.func.id===e.funcId);
+  if(idx>=0){
+    encBulkRows[idx].fgts=e.fgts||0;
+    encBulkRows[idx].inss=e.inss||0;
+    encBulkRows[idx].sind=e.sind||0;
+    encBulkRows[idx].seg=e.seg||0;
+    encBulkRows[idx].pens=e.pens||0;
+    encBulkRows[idx].cesta=e.cesta||0;
+    encBulkRows[idx].obs=e.obs||'';
+    // Remove from encargos so saveEncargoBulk won't duplicate
+    const existIdx=encargos.findIndex(x=>x.id===e.id);
+    if(existIdx>=0){encargos.splice(existIdx,1);lsE();fbDeleteEnc(e.id);}
+    renderEncBulk();
+    toast('✏️ Edite os valores e clique em Salvar Lançamentos','w');
+  }
 }
+
+
 
 async function deleteEncargo(id) {
   if (!confirm('Remover este lançamento de encargo?')) return;
