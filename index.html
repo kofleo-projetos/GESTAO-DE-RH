@@ -249,6 +249,21 @@
   #fb-status.offline{background:#fee2e2;color:#991b1b}
   #fb-status.loading{background:#fef3c7;color:#92400e}
 
+  /* ── SAVE SUCCESS POPUP ─────────────────────── */
+  #save-popup{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;display:none;align-items:center;justify-content:center}
+  #save-popup.open{display:flex}
+  #save-popup-box{background:#fff;border-radius:20px;padding:32px 36px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.22);max-width:360px;width:90%;animation:popIn .25s cubic-bezier(.34,1.56,.64,1)}
+  @keyframes popIn{from{transform:scale(.7);opacity:0}to{transform:scale(1);opacity:1}}
+  #save-popup-icon{font-size:52px;margin-bottom:10px}
+  #save-popup-title{font-size:20px;font-weight:800;color:#10b981;margin-bottom:6px}
+  #save-popup-msg{font-size:14px;color:#64748b;margin-bottom:22px;line-height:1.5}
+  #save-popup-ok{background:#10b981;color:#fff;border:none;padding:11px 32px;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;transition:background .2s}
+  #save-popup-ok:hover{background:#059669}
+
+  /* ── PRINT / PDF ─────────────────────────────── */
+  /* O relatório PDF é gerado em nova janela via exportDashboardPDF() */
+  #dash-pdf-header { display:none; }
+
   /* Status action buttons */
   .status-actions{display:flex;gap:3px;flex-wrap:wrap}
   .status-actions .btn{font-size:10px;padding:3px 7px;border-radius:6px}
@@ -432,62 +447,6 @@
     </div>
   </nav>
 
-  <div class="sb-filter">
-    <div class="sb-filter-title">
-      <svg viewBox="0 0 24 24"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
-      Filtros
-    </div>
-
-    <!-- Ano + Mês lado a lado -->
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:6px">
-      <div>
-        <div style="font-size:9px;font-weight:700;color:#818cf8;text-transform:uppercase;letter-spacing:.6px;margin-bottom:3px">Ano</div>
-        <select class="sb-sel" id="sb-ano" onchange="updateDash()" style="margin-bottom:0;width:100%">
-          <option value="">Todos</option>
-          <option value="2024">2024</option>
-          <option value="2025">2025</option>
-          <option value="2026">2026</option>
-          <option value="2027">2027</option>
-        </select>
-      </div>
-      <div>
-        <div style="font-size:9px;font-weight:700;color:#818cf8;text-transform:uppercase;letter-spacing:.6px;margin-bottom:3px">Mês</div>
-        <select class="sb-sel" id="sb-mes" onchange="updateDash()" style="margin-bottom:0;width:100%">
-          <option value="">Todos</option>
-          <option value="1">Jan</option><option value="2">Fev</option><option value="3">Mar</option>
-          <option value="4">Abr</option><option value="5">Mai</option><option value="6">Jun</option>
-          <option value="7">Jul</option><option value="8">Ago</option><option value="9">Set</option>
-          <option value="10">Out</option><option value="11">Nov</option><option value="12">Dez</option>
-        </select>
-      </div>
-    </div>
-
-    <!-- Empresa -->
-    <div style="margin-bottom:6px">
-      <div style="font-size:9px;font-weight:700;color:#818cf8;text-transform:uppercase;letter-spacing:.6px;margin-bottom:3px;display:flex;align-items:center;gap:4px">
-        <svg style="width:10px;height:10px;stroke:#818cf8;fill:none;stroke-width:2.5;stroke-linecap:round" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-        Empresa
-      </div>
-      <select class="sb-sel" id="sb-empresa" onchange="if($('sb-func'))$('sb-func').value='';updateDash()" style="margin-bottom:0;width:100%">
-        <option value="">Todas</option>
-      </select>
-    </div>
-
-    <!-- Funcionário -->
-    <div style="margin-bottom:4px">
-      <div style="font-size:9px;font-weight:700;color:#818cf8;text-transform:uppercase;letter-spacing:.6px;margin-bottom:3px;display:flex;align-items:center;gap:4px">
-        <svg style="width:10px;height:10px;stroke:#818cf8;fill:none;stroke-width:2.5;stroke-linecap:round" viewBox="0 0 24 24"><circle cx="9" cy="7" r="3.5"/><path d="M2 21v-1.5A5.5 5.5 0 0 1 7.5 14h3A5.5 5.5 0 0 1 16 19.5V21"/></svg>
-        Funcionário
-      </div>
-      <select class="sb-sel" id="sb-func" onchange="updateDash()" style="margin-bottom:0;width:100%">
-        <option value="">Todos</option>
-      </select>
-    </div>
-
-    <!-- Badge período (oculto) -->
-    <div id="sb-period-badge" style="display:none"></div>
-    <div class="sb-filter-badge" id="sb-filter-badge2" style="display:none;margin-top:4px">👤 Filtro ativo</div>
-  </div>
   <div class="sb-foot">
     <div id="fb-status" class="loading" style="justify-content:center;margin-bottom:8px">⏳ Conectando...</div>
     Sistema desenvolvido por Leandro Machado
@@ -526,7 +485,80 @@
 
     <!-- DASHBOARD -->
     <div id="tab-dashboard" class="tab active">
+
+      <!-- FILTROS DO DASHBOARD -->
+      <div class="filter-bar" style="margin-bottom:20px;flex-wrap:wrap;gap:10px">
+        <div style="display:flex;align-items:center;gap:6px">
+          <svg style="width:15px;height:15px;stroke:#6366f1;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0" viewBox="0 0 24 24"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+          <span style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Filtros do Dashboard</span>
+        </div>
+        <div class="filter-group">
+          <svg style="width:14px;height:14px;stroke:#6366f1;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          <label>Ano</label>
+          <select class="fsel" id="sb-ano" onchange="updateDash()" style="min-width:80px">
+            <option value="">Todos</option>
+            <option value="2024">2024</option>
+            <option value="2025">2025</option>
+            <option value="2026">2026</option>
+            <option value="2027">2027</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <svg style="width:14px;height:14px;stroke:#6366f1;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          <label>Mês</label>
+          <select class="fsel" id="sb-mes" onchange="updateDash()" style="min-width:100px">
+            <option value="">Todos</option>
+            <option value="1">Janeiro</option><option value="2">Fevereiro</option><option value="3">Março</option>
+            <option value="4">Abril</option><option value="5">Maio</option><option value="6">Junho</option>
+            <option value="7">Julho</option><option value="8">Agosto</option><option value="9">Setembro</option>
+            <option value="10">Outubro</option><option value="11">Novembro</option><option value="12">Dezembro</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <svg style="width:14px;height:14px;stroke:#6366f1;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          <label>Empresa</label>
+          <select class="fsel" id="sb-empresa" onchange="if($('sb-func'))$('sb-func').value='';updateDash()" style="min-width:140px">
+            <option value="">Todas</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <svg style="width:14px;height:14px;stroke:#6366f1;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          <label>Funcionário</label>
+          <select class="fsel" id="sb-func" onchange="updateDash()" style="min-width:160px">
+            <option value="">Todos</option>
+          </select>
+        </div>
+        <div style="display:flex;gap:8px;margin-left:auto">
+          <button class="btn bs sm" onclick="$('sb-ano').value=new Date().getFullYear();$('sb-mes').value='';$('sb-empresa').value='';$('sb-func').value='';updateDash()">
+            <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            Limpar
+          </button>
+          <button class="btn bp sm" onclick="exportDashboardPDF()" style="background:#dc2626" title="Exportar relatório PDF do Dashboard">
+            <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M9 15h6"/><path d="M9 11h3"/></svg>
+            Exportar PDF
+          </button>
+        </div>
+        <div id="sb-filter-badge2" style="display:none;background:var(--primary-light);color:var(--primary-dark);padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700"></div>
+        <div id="sb-period-badge" style="display:none"></div>
+      </div>
+
       <!-- 9 CARTÕES — ordem: Func | VR | VT | 5du | Adt | 13 | Férias | Total | CMF -->
+      <div id="dash-print-area">
+
+      <!-- Cabeçalho que aparece só no PDF/impressão -->
+      <div id="dash-pdf-header" style="margin-bottom:22px;padding-bottom:14px;border-bottom:2px solid #6366f1">
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <div>
+            <div style="font-size:22px;font-weight:900;color:#1e1b4b">RH Benefícios</div>
+            <div id="pdf-subtitle" style="font-size:13px;color:#64748b;margin-top:3px"></div>
+          </div>
+          <div style="text-align:right;font-size:11px;color:#94a3b8">
+            <div id="pdf-empresa-label" style="font-size:14px;font-weight:700;color:#1e1b4b"></div>
+            <div id="pdf-date" style="margin-top:3px"></div>
+          </div>
+        </div>
+      </div>
+
       <div class="cg" style="grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:16px;margin-bottom:20px">
 
         <!-- 1. Funcionários Ativos -->
@@ -673,6 +705,7 @@
         <div class="cc"><h3><svg style="width:16px;height:16px;stroke:#f59e0b;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:-3px;margin-right:6px" viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Adiantamento</h3><canvas id="cAdiantamento" height="55"></canvas></div>
         <div class="cc"><h3><svg style="width:16px;height:16px;stroke:#6366f1;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:-3px;margin-right:6px" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Gasto Total por Empresa</h3><canvas id="cEmp" height="80"></canvas></div>
       </div>
+      </div><!-- end dash-print-area -->
     </div>
 
     <!-- FUNCIONÁRIOS -->
@@ -2450,7 +2483,9 @@ async function salvarLanc(){
   lancamentos.push(...novos);
   lsL();
   for(const l of novos){ await fbSaveLanc(l); }
-  toast(`${calcRows.length} lançamentos salvos para ${MESES[mes]}/${ano}!`);updateDash();
+  toast(`${calcRows.length} lançamentos salvos para ${MESES[mes]}/${ano}!`);
+  showSavePopup(`${calcRows.length} lançamento(s) de VR/VT salvos para ${MESES[mes]}/${ano}!`);
+  updateDash();
 }
 
 // ─── VR e VT MODAL (acessado pela aba Pagamentos) ─────────────────────────────
@@ -2654,6 +2689,7 @@ async function salvarVRVTModal(){
   lsL();
   for(const l of novos){await fbSaveLanc(l);}
   toast(`✅ ${novos.length} lançamento(s) VR/VT salvos — ${MESES[mes]}/${ano}!`,'g');
+  showSavePopup(`${novos.length} lançamento(s) de VR/VT salvos — ${MESES[mes]}/${ano}!`);
   updateDash();
 }
 
@@ -2769,6 +2805,8 @@ async function delLanc(id){
 // ─── FOLHA DE PAGAMENTO ───────────────────────────────────────────────────────
 let folhaMode='5du';
 let folhaRows=[];
+// Preserva valores de todos os funcionários independente do filtro de empresa ativo
+let _folhaAllData={};
 
 const FOLHA_MODO_LABELS={'5du':'📅 Folha — 5º Dia Útil','adt':'💰 Folha — Adiantamento','13':'🎁 Folha — Décimo Terceiro','fer':'🏖️ Folha — Férias','rec':'📄 Folha — Rescisão'};
 
@@ -2779,6 +2817,7 @@ function setFolhaMode(mode,el){
   }
   folhaMode=mode;
   folhaRows=[];
+  _folhaAllData={}; // limpa ao trocar modo
   document.querySelectorAll('.folha-mode-btn').forEach(b=>b.classList.remove('active'));
   if(el)el.classList.add('active');
   const titleEl=$('fp-title');if(titleEl)titleEl.textContent=FOLHA_MODO_LABELS[mode]||'Folha';
@@ -2801,14 +2840,13 @@ function renderFolha(){
     $('tb-folha').innerHTML=`<tr><td colspan="7"><div class="es"><div class="ei">👤</div><p>Nenhum funcionário ativo encontrado</p></div></td></tr>`;
     folhaRows=[];updFolhaTotals();return;
   }
-  // Preserve user-edited values for employees already in folhaRows
-  const prevMap={};
-  folhaRows.forEach(r=>{ prevMap[r.func.id]={salario:r.salario,comissao:r.comissao||0,outros:r.outros||0,multaRecisoria:r.multaRecisoria||0,recisaoFerias:r.recisaoFerias||0,avisoPrevio:r.avisoPrevio||0,total:r.total}; });
+  // Salva valores atuais de folhaRows no mapa global ANTES de reconstruir
+  folhaRows.forEach(r=>{ _folhaAllData[r.func.id]={salario:r.salario,comissao:r.comissao||0,outros:r.outros||0,multaRecisoria:r.multaRecisoria||0,recisaoFerias:r.recisaoFerias||0,avisoPrevio:r.avisoPrevio||0,total:r.total}; });
 
-  // Pre-fill salary/advance from employee record based on current mode
+  // Pre-fill salary/advance from employee record or from global saved data
   folhaRows=lista.map(f=>{
-    if(prevMap[f.id]){
-      const prev=prevMap[f.id];
+    if(_folhaAllData[f.id]){
+      const prev=_folhaAllData[f.id];
       return {func:f,...prev};
     }
     let salario=0,outros=0;
@@ -2874,6 +2912,9 @@ function updFolhaRow(i,campo,val){
   folhaRows[i][campo]=v;
   folhaRows[i].total=folhaRows[i].salario+(folhaMode==='5du'?folhaRows[i].comissao:0)+folhaRows[i].outros;
   $(`frow-tot${i}`).textContent=fmt(folhaRows[i].total);
+  // persiste no mapa global
+  const r=folhaRows[i];
+  _folhaAllData[r.func.id]={salario:r.salario,comissao:r.comissao||0,outros:r.outros||0,multaRecisoria:r.multaRecisoria||0,recisaoFerias:r.recisaoFerias||0,avisoPrevio:r.avisoPrevio||0,total:r.total};
   updFolhaTotals();
 }
 
@@ -2882,6 +2923,9 @@ function updFolhaRowRec(i,campo,val){
   folhaRows[i][campo]=v;
   folhaRows[i].total=(folhaRows[i].multaRecisoria||0)+(folhaRows[i].recisaoFerias||0)+(folhaRows[i].salario||0)+(folhaRows[i].avisoPrevio||0);
   $(`frow-tot${i}`).textContent=fmt(folhaRows[i].total);
+  // persiste no mapa global
+  const r=folhaRows[i];
+  _folhaAllData[r.func.id]={salario:r.salario,comissao:r.comissao||0,outros:r.outros||0,multaRecisoria:r.multaRecisoria||0,recisaoFerias:r.recisaoFerias||0,avisoPrevio:r.avisoPrevio||0,total:r.total};
   updFolhaTotals();
 }
 
@@ -2899,14 +2943,27 @@ async function salvarFolha(){
   const hasData=folhaRows.some(r=>r.total>0);
   if(!hasData){alert('Informe ao menos um valor antes de salvar!');return;}
   const ano=parseInt($('fp-ano').value),mes=parseInt($('fp-mes').value);
-  // Remove lançamentos do mesmo período/tipo
- const fe=$('fp-emp')?.value||'';
-  const toDelete=lancamentos.filter(l=>l.mes===mes&&l.ano===ano&&l.tipo===folhaMode&&(!fe||l.funcEmp===fe));
+
+  // Salva o estado atual no mapa global antes de consolidar
+  folhaRows.forEach(r=>{ _folhaAllData[r.func.id]={salario:r.salario,comissao:r.comissao||0,outros:r.outros||0,multaRecisoria:r.multaRecisoria||0,recisaoFerias:r.recisaoFerias||0,avisoPrevio:r.avisoPrevio||0,total:r.total}; });
+
+  // Consolida todos os dados do mapa global em rowsParaSalvar
+  const todosOsFuncionarios=funcionarios.filter(f=>(f.status||'ativo')==='ativo');
+  const rowsParaSalvar=todosOsFuncionarios.map(f=>{
+    const d=_folhaAllData[f.id];
+    if(!d)return null;
+    const r=folhaRows.find(x=>x.func.id===f.id);
+    return {func:f,...d};
+  }).filter(r=>r&&r.total>0);
+
+  if(!rowsParaSalvar.length){alert('Informe ao menos um valor antes de salvar!');return;}
+
+  // Remove lançamentos do mesmo período/tipo (sem filtro de empresa — salva tudo)
+  const toDelete=lancamentos.filter(l=>l.mes===mes&&l.ano===ano&&l.tipo===folhaMode);
   for(const l of toDelete){await fbDeleteLanc(l.id);}
-  lancamentos=lancamentos.filter(l=>!(l.mes===mes&&l.ano===ano&&l.tipo===folhaMode&&(!fe||l.funcEmp===fe)));
+  lancamentos=lancamentos.filter(l=>!(l.mes===mes&&l.ano===ano&&l.tipo===folhaMode));
 
-
-  const novos=folhaRows.filter(r=>r.total>0).map(r=>({
+  const novos=rowsParaSalvar.map(r=>({
     id:uid(),mes,ano,tipo:folhaMode,
     funcId:r.func.id,funcNome:r.func.nome,funcEscala:r.func.escala,funcEmp:r.func.empresa||'',
     salario:r.salario,comissao:r.comissao||0,outros:r.outros||0,
@@ -2918,6 +2975,7 @@ async function salvarFolha(){
   lsL();
   for(const l of novos){await fbSaveLanc(l);}
   toast(`${novos.length} lançamentos de ${FOLHA_MODO_LABELS[folhaMode]} salvos!`);
+  showSavePopup(`${novos.length} lançamento(s) de ${FOLHA_MODO_LABELS[folhaMode]} salvos — ${MESES[mes]}/${ano}!`);
   updateDash();
 }
 
@@ -4381,6 +4439,172 @@ async function deleteAtestado(atId) {
   toast('\ud83d\uddd1\ufe0f Atestado removido!', 'd');
 }
 
+// ─── SAVE SUCCESS POPUP ───────────────────────────────────────────────────────
+function showSavePopup(msg){
+  const box=$('save-popup');
+  if(!box)return;
+  $('save-popup-msg').textContent=msg||'Lançamento salvo com sucesso!';
+  box.classList.add('open');
+  // auto-close after 4s
+  clearTimeout(window._savePopupTimer);
+  window._savePopupTimer=setTimeout(()=>box.classList.remove('open'),4000);
+}
+function closeSavePopup(){
+  const box=$('save-popup');if(box)box.classList.remove('open');
+}
+
+// ─── EXPORT DASHBOARD PDF ─────────────────────────────────────────────────────
+function exportDashboardPDF(){
+  const fAno = ($('sb-ano')||{}).value||'';
+  const fMes = ($('sb-mes')||{}).value||'';
+  const fEmp = ($('sb-empresa')||{}).value||'';
+  const fFunc= ($('sb-func')||{}).value||'';
+
+  const MESES_LABEL=['','Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  const periodo = !fAno&&!fMes ? 'Todos os períodos'
+    : !fMes&&fAno ? fAno
+    : !fAno&&fMes ? MESES_LABEL[+fMes]
+    : MESES_LABEL[+fMes]+'/'+fAno;
+  const empresaLabel = fEmp || 'Todas as Empresas';
+
+  // ── Filtra lançamentos ──────────────────────────────────────────
+  let al=[...lancamentos];
+  if(fAno) al=al.filter(l=>l.ano==fAno);
+  if(fMes) al=al.filter(l=>l.mes==fMes);
+  if(fEmp) al=al.filter(l=>(l.funcEmp||'')===(fEmp));
+  if(fFunc) al=al.filter(l=>l.funcId===fFunc||l.funcNome===funcionarios.find(f=>f.id===fFunc)?.nome);
+
+  // ── Totais por categoria ────────────────────────────────────────
+  const tvr   = al.filter(l=>!l.tipo||l.tipo==='vrvt').reduce((s,l)=>s+(l.vr||0),0);
+  const tvt   = al.filter(l=>!l.tipo||l.tipo==='vrvt').reduce((s,l)=>s+(l.vt||0),0);
+  const t5du  = al.filter(l=>l.tipo==='5du').reduce((s,l)=>s+(l.total||0),0);
+  const tadt  = al.filter(l=>l.tipo==='adt').reduce((s,l)=>s+(l.total||0),0);
+  const t13   = al.filter(l=>l.tipo==='13').reduce((s,l)=>s+(l.total||0),0);
+  const tfer  = al.filter(l=>l.tipo==='fer').reduce((s,l)=>s+(l.total||0),0);
+  const trec  = al.filter(l=>l.tipo==='rec').reduce((s,l)=>s+(l.total||0),0);
+  const encFilt = (encargos||[]).filter(e=>(!fAno||e.ano==fAno)&&(!fMes||e.mes==fMes)&&(!fEmp||(e.empresa||'')===(fEmp)));
+  const tenc  = encFilt.reduce((s,e)=>s+(e.total||0),0);
+  const tGeral= tvr+tvt+t5du+tadt+t13+tfer+trec+tenc;
+
+  // ── Funcionários ativos (filtrados por empresa) ─────────────────
+  let funcsAtivos = funcionarios.filter(f=>(f.status||'ativo')==='ativo');
+  if(fEmp) funcsAtivos = funcsAtivos.filter(f=>(f.empresa||'')===(fEmp));
+  const totalFuncs = funcsAtivos.length;
+  const emFerias   = funcsAtivos.filter(f=>f.status==='ferias').length;
+  const inativos   = funcionarios.filter(f=>(f.status||'ativo')==='inativo'&&(!fEmp||(f.empresa||'')===(fEmp))).length;
+
+  const funcMap={};
+  al.forEach(l=>{
+    const key=l.funcId||l.funcNome;
+    if(!funcMap[key]) funcMap[key]={total:0};
+    const t=l.tipo||'vrvt';
+    if(t==='vrvt'){funcMap[key].total+=(l.vr||0)+(l.vt||0);}
+    else funcMap[key].total+=(l.total||0);
+  });
+  const qFunc = Object.values(funcMap).filter(r=>r.total>0).length || Math.max(totalFuncs,1);
+  const custoMedio = tGeral/qFunc;
+
+  const R=v=>'R$ '+v.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+
+  // ── Card template ───────────────────────────────────────────────
+  const card=(icon,label,value,sub,accent,bg='#fff',textColor='#0f172a',subColor='#94a3b8')=>`
+    <div style="background:${bg};border:1px solid #e2e8f0;border-radius:12px;padding:18px 16px 14px;position:relative;overflow:hidden;display:flex;flex-direction:column;gap:4px;min-height:110px">
+      <div style="position:absolute;top:0;left:0;right:0;height:3.5px;background:${accent};border-radius:12px 12px 0 0"></div>
+      <div style="width:32px;height:32px;border-radius:8px;background:${bg==='#fff'?'#f1f5f9':'rgba(255,255,255,.15)'};display:flex;align-items:center;justify-content:center;font-size:16px;margin-bottom:2px">${icon}</div>
+      <div style="font-size:8px;font-weight:800;color:${bg==='#fff'?'#94a3b8':'rgba(255,255,255,.7)'};text-transform:uppercase;letter-spacing:.6px">${label}</div>
+      <div style="font-size:${value.length>10?'15px':value.length>7?'17px':'20px'};font-weight:900;color:${textColor};line-height:1.1">${value}</div>
+      <div style="font-size:9px;color:${subColor}">${sub}</div>
+    </div>`;
+
+  const totalCard=`
+    <div style="background:linear-gradient(135deg,#6366f1,#4f46e5);border-radius:12px;padding:18px 16px 14px;position:relative;overflow:hidden;display:flex;flex-direction:column;gap:4px;min-height:110px">
+      <div style="width:32px;height:32px;border-radius:8px;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:16px;margin-bottom:2px">📊</div>
+      <div style="font-size:8px;font-weight:800;color:rgba(255,255,255,.7);text-transform:uppercase;letter-spacing:.6px">TOTAL GERAL</div>
+      <div style="font-size:${R(tGeral).length>12?'15px':R(tGeral).length>9?'17px':'20px'};font-weight:900;color:#fff;line-height:1.1">${R(tGeral)}</div>
+      <div style="font-size:9px;color:rgba(255,255,255,.65)">lançamentos + encargos</div>
+    </div>`;
+
+  const html=`<!DOCTYPE html><html lang="pt-BR"><head>
+<meta charset="UTF-8">
+<title>Relatório de Gestão de RH</title>
+<style>
+  @page { margin:12mm; size:A4 portrait; }
+  * { box-sizing:border-box; margin:0; padding:0 }
+  html { -webkit-print-color-adjust:exact; print-color-adjust:exact }
+  body { font-family:'Segoe UI',Arial,sans-serif; font-size:10px; color:#1e293b; background:#f8fafc; -webkit-print-color-adjust:exact; print-color-adjust:exact }
+  .no-print { margin-bottom:14px; padding:10px 14px; background:#fef3c7; border-radius:8px; font-size:11px; color:#92400e; display:flex; align-items:center; gap:8px }
+  @media print {
+    .no-print { display:none }
+    body { background:#fff }
+    /* Remove browser-injected header/footer (file path, title, page number) */
+    /* This works in Chrome/Edge when printing via Ctrl+P > More settings > uncheck Headers and footers */
+  }
+</style>
+</head><body>
+
+<div class="no-print">
+  <strong>⚠️ Para salvar como PDF:</strong> Use Ctrl+P → Mais configurações → desmarque <em>Cabeçalhos e rodapés</em> → Salvar como PDF → Retrato
+  <button onclick="window.print()" style="margin-left:auto;background:#6366f1;color:#fff;border:none;padding:7px 18px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer">🖨️ Imprimir / Salvar PDF</button>
+</div>
+
+<!-- Cabeçalho ─────────────────────────────────────────────────── -->
+<div style="background:linear-gradient(135deg,#4338ca,#6366f1);padding:16px 20px 14px;border-radius:12px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center">
+  <div>
+    <div style="font-size:16px;font-weight:900;color:#fff;letter-spacing:-.3px">📋 Relatório de Gestão de RH</div>
+    <div style="font-size:10px;color:rgba(255,255,255,.75);margin-top:4px">Período: ${periodo}</div>
+  </div>
+  <div style="text-align:right">
+    <div style="font-size:13px;font-weight:800;color:#fff">${empresaLabel}</div>
+    <div style="font-size:9px;color:rgba(255,255,255,.65);margin-top:3px">Emitido em: ${new Date().toLocaleString('pt-BR')}</div>
+  </div>
+</div>
+
+<!-- Separador ─────────────────────────────────────────────────── -->
+<div style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.7px;color:#6366f1;margin-bottom:10px">Resumo Financeiro</div>
+
+<!-- Grade de cartões — linha 1: 5 cards ──────────────────────── -->
+<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:8px">
+  ${card('👥','Funcionários Ativos',String(totalFuncs),`${emFerias} férias · ${inativos} inativos`,'#6366f1')}
+  ${card('💳','Vale Refeição (VR)',R(tvr),periodo,'#10b981')}
+  ${card('🚌','Vale Transporte (VT)',R(tvt),periodo,'#f59e0b')}
+  ${card('📅','5º Dia Útil',R(t5du),'folha de pagamento','#3b82f6')}
+  ${card('💵','Adiantamento',R(tadt),'folha de pagamento','#f59e0b')}
+</div>
+
+<!-- Grade de cartões — linha 2: 5 cards ──────────────────────── -->
+<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:16px">
+  ${card('🎁','Décimo Terceiro',R(t13),'folha de pagamento','#ec4899')}
+  ${card('🏖️','Férias',R(tfer),'folha de pagamento','#3b82f6')}
+  ${card('📄','Encargos',R(tenc),'lançamentos','#ef4444')}
+  ${totalCard}
+  ${card('👤','Custo Médio/Func.',R(custoMedio),'por funcionário','#8b5cf6')}
+</div>
+
+<!-- Separador ─────────────────────────────────────────────────── -->
+<div style="height:1px;background:#e2e8f0;margin-bottom:14px"></div>
+
+<!-- Nota informativa ──────────────────────────────────────────── -->
+<div style="font-size:8.5px;color:#94a3b8;line-height:1.7">
+  ⚠ Funcionários com status <strong>Inativo</strong> ou <strong>Férias</strong> são excluídos automaticamente do cálculo de Vale Transporte (VT).<br>
+  &nbsp;&nbsp;&nbsp;Valores R$ 0,00 indicam que não há lançamentos registrados no período para a categoria.
+</div>
+
+<!-- Rodapé ────────────────────────────────────────────────────── -->
+<div style="margin-top:auto;padding-top:14px;border-top:1px solid #e2e8f0;font-size:8px;color:#94a3b8;display:flex;justify-content:space-between;margin-top:20px">
+  <div style="display:flex;flex-direction:column;gap:1px">
+    <span>Sistema de Gestão de RH · Relatório Confidencial</span>
+    <span style="color:#6366f1;font-weight:600">Desenvolvido por Leandro Machado</span>
+  </div>
+  <span>Gerado em ${new Date().toLocaleString('pt-BR')}</span>
+</div>
+
+</body></html>`;
+
+  const w=window.open('','_blank','width=900,height=750');
+  if(w){ w.document.write(html); w.document.close(); }
+  else { alert('Bloqueador de pop-up ativo. Permita pop-ups para este site e tente novamente.'); }
+}
+
 function backupData(){
   const blob=new Blob([JSON.stringify({funcionarios,lancamentos,encargos,creditos,atestados,config,_exportedAt:new Date().toISOString()},null,2)],{type:'application/json'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);
@@ -4463,5 +4687,15 @@ Deseja continuar?`)){e.target.value='';return;}
   reader.readAsText(file);
 }
 </script>
+
+<!-- SAVE SUCCESS POPUP -->
+<div id="save-popup">
+  <div id="save-popup-box">
+    <div id="save-popup-icon">✅</div>
+    <div id="save-popup-title">Lançamento Salvo!</div>
+    <div id="save-popup-msg">Salvo com sucesso.</div>
+    <button id="save-popup-ok" onclick="closeSavePopup()">OK</button>
+  </div>
+</div>
 </body>
 </html>
