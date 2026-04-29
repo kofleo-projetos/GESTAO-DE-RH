@@ -3341,9 +3341,112 @@ function exportPDF(){
   const modeColor={'':['#6366f1','#4f46e5'],vrvt:['#6366f1','#4f46e5'],'5du':['#059669','#065f46'],adt:['#d97706','#92400e'],'13':['#db2777','#9d174d'],fer:['#2563eb','#1e40af']}[tipo]||['#6366f1','#4f46e5'];
   const mc1=modeColor[0],mc2=modeColor[1];
 
-  // Build thead based on mode
+  // ── MODO "TODOS OS LANÇAMENTOS": agrupa por funcionário com todas as colunas ──
+  if(!tipo){
+    // Collect all lancamentos + encargos filtered the same way
+    const allList=[...lancamentos].filter(l=>(l.total||0)>0);
+    const fm2=$('fl-mes')?.value||'';
+    const ff2=$('fl-func')?.value||'';
+    const fe2=$('fl-emp')?.value||'';
+    const filteredLanc=allList.filter(l=>(!fm2||l.mes==fm2)&&(!ff2||l.funcNome===ff2)&&(!fe2||(l.funcEmp||'')=== fe2));
+    const filteredEnc=(encargos||[]).filter(e=>(!fm2||e.mes==fm2)&&(!ff2||e.funcNome===ff2)&&(!fe2||(e.funcEmp||'')=== fe2)&&(e.total||0)>0);
+
+    // Build per-employee-per-company aggregated rows
+    // Key: empresa + funcNome
+    const empFuncMap={};
+    filteredLanc.forEach(l=>{
+      const emp=l.funcEmp||'Sem Empresa';
+      const key=emp+'|||'+l.funcNome;
+      if(!empFuncMap[key])empFuncMap[key]={emp,nome:l.funcNome,escala:l.funcEscala||'',vr:0,vt:0,du5:0,adt:0,dec13:0,fer:0,enc:0};
+      const t=l.tipo||'vrvt';
+      if(t==='vrvt'){empFuncMap[key].vr+=(l.vr||0);empFuncMap[key].vt+=(l.vt||0);}
+      else if(t==='5du')empFuncMap[key].du5+=l.total;
+      else if(t==='adt')empFuncMap[key].adt+=l.total;
+      else if(t==='13')empFuncMap[key].dec13+=l.total;
+      else if(t==='fer')empFuncMap[key].fer+=l.total;
+    });
+    filteredEnc.forEach(e=>{
+      const emp=e.funcEmp||'Sem Empresa';
+      const key=emp+'|||'+e.funcNome;
+      if(!empFuncMap[key])empFuncMap[key]={emp,nome:e.funcNome,escala:'',vr:0,vt:0,du5:0,adt:0,dec13:0,fer:0,enc:0};
+      empFuncMap[key].enc+=(e.total||0);
+    });
+
+    // Group by empresa
+    const empGroups={};
+    Object.values(empFuncMap).forEach(row=>{
+      if(!empGroups[row.emp])empGroups[row.emp]=[];
+      empGroups[row.emp].push(row);
+    });
+    const empresasSorted=Object.keys(empGroups).sort();
+
+    let grandEVR=0,grandEVT=0,grandE5du=0,grandEAdt=0,grandE13=0,grandEFer=0,grandEEnc=0,grandETotal=0;
+
+    const theadTodos=`<tr>
+      <th style="width:22%">Funcionário</th>
+      <th style="width:7%" class="num">VR</th>
+      <th style="width:7%" class="num">VT</th>
+      <th style="width:8%" class="num">5º Dia Útil</th>
+      <th style="width:8%" class="num">Adiantamento</th>
+      <th style="width:9%" class="num">Déc. Terceiro</th>
+      <th style="width:7%" class="num">Férias</th>
+      <th style="width:8%" class="num">Encargos</th>
+      <th style="width:9%" class="num bold">Total</th>
+    </tr>`;
+
+    empresasSorted.forEach(emp=>{
+      const rows=empGroups[emp].sort((a,b)=>a.nome.localeCompare(b.nome));
+      let rowsHtml='';
+      let eVR=0,eVT=0,e5du=0,eAdt=0,e13=0,eFer=0,eEnc=0,eTotal=0;
+      rows.forEach((r,i)=>{
+        const rowTotal=r.vr+r.vt+r.du5+r.adt+r.dec13+r.fer+r.enc;
+        eVR+=r.vr;eVT+=r.vt;e5du+=r.du5;eAdt+=r.adt;e13+=r.dec13;eFer+=r.fer;eEnc+=r.enc;eTotal+=rowTotal;
+        const z=v=>v>0?`<span style="color:#334155;font-weight:600">${fmtR(v)}</span>`:`<span style="color:#cbd5e1">—</span>`;
+        rowsHtml+=`<tr class="${i%2===0?'even':'odd'}">
+          <td>${r.nome}</td>
+          <td class="num">${z(r.vr)}</td>
+          <td class="num">${z(r.vt)}</td>
+          <td class="num">${z(r.du5)}</td>
+          <td class="num">${z(r.adt)}</td>
+          <td class="num">${z(r.dec13)}</td>
+          <td class="num">${z(r.fer)}</td>
+          <td class="num">${z(r.enc)}</td>
+          <td class="num" style="font-weight:800;color:${mc1}">${fmtR(rowTotal)}</td>
+        </tr>`;
+        grandFuncs++;
+      });
+      grandEVR+=eVR;grandEVT+=eVT;grandE5du+=e5du;grandEAdt+=eAdt;grandE13+=e13;grandEFer+=eFer;grandEEnc+=eEnc;grandETotal+=eTotal;grandTotal+=eTotal;
+      const subtotalCols=`
+        <td class="num"><strong>${fmtR(eVR)}</strong></td>
+        <td class="num"><strong>${fmtR(eVT)}</strong></td>
+        <td class="num"><strong>${fmtR(e5du)}</strong></td>
+        <td class="num"><strong>${fmtR(eAdt)}</strong></td>
+        <td class="num"><strong>${fmtR(e13)}</strong></td>
+        <td class="num"><strong>${fmtR(eFer)}</strong></td>
+        <td class="num"><strong>${fmtR(eEnc)}</strong></td>
+        <td class="num bold purple"><strong>${fmtR(eTotal)}</strong></td>`;
+      bodyHtml+=`<div class="section"><div class="emp-header">${emp}</div><table><thead>${theadTodos}</thead><tbody>${rowsHtml}</tbody><tfoot><tr class="subtotal"><td><strong>Subtotal ${emp}</strong> <span class="func-count">${rows.length} func.</span></td>${subtotalCols}</tr></tfoot></table></div>`;
+    });
+
+    const grandNumsHtmlTodos=`
+      <div class="gt-item"><div class="lbl">VR</div><div class="val">${fmtR(grandEVR)}</div></div>
+      <div class="gt-item"><div class="lbl">VT</div><div class="val">${fmtR(grandEVT)}</div></div>
+      <div class="gt-item"><div class="lbl">5º Dia Útil</div><div class="val">${fmtR(grandE5du)}</div></div>
+      <div class="gt-item"><div class="lbl">Adiantamento</div><div class="val">${fmtR(grandEAdt)}</div></div>
+      <div class="gt-item"><div class="lbl">Déc. Terceiro</div><div class="val">${fmtR(grandE13)}</div></div>
+      <div class="gt-item"><div class="lbl">Férias</div><div class="val">${fmtR(grandEFer)}</div></div>
+      <div class="gt-item"><div class="lbl">Encargos</div><div class="val">${fmtR(grandEEnc)}</div></div>
+      <div class="gt-item"><div class="lbl">Total</div><div class="val">${fmtR(grandETotal)}</div></div>`;
+
+    const htmlTodos=`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>${modoLabel} — ${per}</title><style>@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');*{box-sizing:border-box;margin:0;padding:0}body{font-family:'Inter',Arial,sans-serif;color:#1e293b;background:#fff;font-size:10px;padding:20px 24px}.header{text-align:center;margin-bottom:22px;padding-bottom:14px;border-bottom:2.5px solid ${mc1}}.logo-bar{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:8px}.logo-icon{width:36px;height:36px;background:linear-gradient(135deg,${mc1},${mc2});border-radius:10px;display:flex;align-items:center;justify-content:center}.logo-icon svg{width:20px;height:20px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}.doc-title{font-size:18px;font-weight:800;color:#1e293b;letter-spacing:-.3px}.doc-sub{font-size:13px;font-weight:700;color:${mc1};margin-top:4px}.meta{display:flex;justify-content:center;gap:24px;margin-top:10px;font-size:10px;color:#64748b}.mode-badge{display:inline-block;padding:3px 12px;border-radius:20px;background:${mc1};color:#fff;font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;margin-top:6px}.section{margin-bottom:18px;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden}.emp-header{background:linear-gradient(135deg,#1e1b4b,#312e81);color:#fff;font-size:11px;font-weight:700;padding:8px 12px;letter-spacing:.5px;text-transform:uppercase}table{width:100%;border-collapse:collapse}th{background:#f8fafc;padding:6px 8px;font-size:8.5px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.3px;border-bottom:1px solid #e2e8f0}td{padding:6px 8px;border-bottom:1px solid #f1f5f9;font-size:9.5px}.even td{background:#fff}.odd td{background:#f8fafc}.num{text-align:right}.bold{font-weight:700}.purple{color:${mc1}}.subtotal td{background:#f1f5f9!important;font-size:9.5px;padding:7px 8px;border-top:2px solid #cbd5e1}.func-count{font-size:8.5px;font-weight:400;color:${mc1};margin-left:6px}.grand-total{margin-top:6px;background:linear-gradient(135deg,${mc1},${mc2});border-radius:10px;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;color:#fff;flex-wrap:wrap;gap:8px}.gt-left{font-size:11px;font-weight:700;white-space:nowrap}.gt-left span{font-size:9.5px;font-weight:400;opacity:.8;margin-left:8px}.gt-nums{display:flex;gap:16px;flex-wrap:wrap}.gt-item{text-align:right}.gt-item .lbl{font-size:8.5px;opacity:.8;text-transform:uppercase;letter-spacing:.3px}.gt-item .val{font-size:12px;font-weight:800}.footer{margin-top:16px;text-align:center;font-size:8.5px;color:#94a3b8;border-top:1px solid #e2e8f0;padding-top:8px}@media print{body{padding:12px 16px}@page{margin:.8cm;size:landscape}}</style></head><body><div class="header"><div class="logo-bar"><div class="logo-icon"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div><div class="doc-title">Gestão de RH</div></div><div class="doc-sub">${modoLabel} — ${per}</div><div><span class="mode-badge">${modoLabel}</span></div><div class="meta"><span><strong>Emissão:</strong> ${hoje}</span><span><strong>Funcionários:</strong> ${grandFuncs}</span><span><strong>Empresas:</strong> ${empresasSorted.join(', ')}</span></div></div>${bodyHtml}<div class="grand-total"><div class="gt-left">Total Geral <span>${grandFuncs} funcionário(s) · ${empresasSorted.length} empresa(s)</span></div><div class="gt-nums">${grandNumsHtmlTodos}</div></div><div class="footer">Documento gerado pelo sistema de Gestão de RH — ${hoje}<br>Desenvolvido por Leandro Machado</div><script>window.onload=()=>window.print();<\/script></body></html>`;
+    const w2=window.open('','_blank','width=1200,height=750');w2.document.write(htmlTodos);w2.document.close();
+    return;
+  }
+  // ── FIM MODO TODOS ────────────────────────────────────────────────────────────
+
+  // Build thead based on mode (VR/VT ou Folha específica)
   let thead='',buildRow;
-  if(isVRVT||!tipo){
+  if(isVRVT){
     thead=`<tr><th style="width:32%">Funcionário</th><th style="width:10%">Escala</th><th style="width:9%" class="num">Dias VR</th><th style="width:12%" class="num">Vale Refeição</th><th style="width:9%" class="num">Dias VT</th><th style="width:12%" class="num">Vale Transporte</th><th style="width:16%" class="num">Total</th></tr>`;
     buildRow=(r,i)=>{
       grandVR+=(r.vr||0);grandVT+=(r.vt||0);grandTotal+=r.total;
@@ -3365,20 +3468,20 @@ function exportPDF(){
     grandFuncs+=rows.length;
 
     let subtotalCols='';
-    if(isVRVT||!tipo){
+    if(isVRVT){
       const eVR=rows.reduce((s,r)=>s+(r.vr||0),0),eVT=rows.reduce((s,r)=>s+(r.vt||0),0);
       subtotalCols=`<td class="num"></td><td class="num green"><strong>${fmtR(eVR)}</strong></td><td class="num"></td><td class="num amber"><strong>${fmtR(eVT)}</strong></td><td class="num bold purple"><strong>${fmtR(eTotal)}</strong></td>`;
     } else {
       const eSal=rows.reduce((s,r)=>s+(r.salario||0),0),eCom=rows.reduce((s,r)=>s+(r.comissao||0),0),eOut=rows.reduce((s,r)=>s+(r.outros||0),0);
       subtotalCols=`<td class="num green"><strong>${fmtR(eSal)}</strong></td><td class="num amber"><strong>${fmtR(eCom)}</strong></td><td class="num"><strong>${fmtR(eOut)}</strong></td><td class="num bold purple"><strong>${fmtR(eTotal)}</strong></td>`;
     }
-    const subtotalSpan=isVRVT||!tipo?2:2;
+    const subtotalSpan=2;
     bodyHtml+=`<div class="section"><div class="emp-header">${emp}</div><table><thead>${thead}</thead><tbody>${rowsHtml}</tbody><tfoot><tr class="subtotal"><td colspan="${subtotalSpan}"><strong>Subtotal ${emp}</strong> <span class="func-count">${rows.length} funcionário(s)</span></td>${subtotalCols}</tr></tfoot></table></div>`;
   });
 
   // Grand total numbers row
   let grandNumsHtml='';
-  if(isVRVT||!tipo){
+  if(isVRVT){
     grandNumsHtml=`<div class="gt-item"><div class="lbl">Vale Refeição</div><div class="val">${fmtR(grandVR)}</div></div><div class="gt-item"><div class="lbl">Vale Transporte</div><div class="val">${fmtR(grandVT)}</div></div><div class="gt-item"><div class="lbl">Total</div><div class="val">${fmtR(grandTotal)}</div></div>`;
   } else {
     grandNumsHtml=`<div class="gt-item"><div class="lbl">Salários</div><div class="val">${fmtR(grandSal)}</div></div><div class="gt-item"><div class="lbl">Comissões</div><div class="val">${fmtR(grandCom)}</div></div><div class="gt-item"><div class="lbl">Total</div><div class="val">${fmtR(grandTotal)}</div></div>`;
