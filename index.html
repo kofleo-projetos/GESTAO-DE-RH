@@ -260,6 +260,20 @@
   #save-popup-ok{background:#10b981;color:#fff;border:none;padding:11px 32px;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;transition:background .2s}
   #save-popup-ok:hover{background:#059669}
 
+  /* ── DEL CONFIRM MODAL ─────────────────────── */
+  #del-confirm{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1100;display:none;align-items:center;justify-content:center}
+  #del-confirm.open{display:flex}
+  #del-confirm-box{background:#fff;border-radius:20px;padding:28px 32px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.25);max-width:400px;width:92%;animation:popIn .22s cubic-bezier(.34,1.56,.64,1)}
+  #del-confirm-icon{font-size:46px;margin-bottom:10px}
+  #del-confirm-title{font-size:18px;font-weight:800;color:#ef4444;margin-bottom:8px}
+  #del-confirm-details{background:#fff5f5;border:1px solid #fecaca;border-radius:10px;padding:12px 16px;margin-bottom:18px;text-align:left;font-size:13px;line-height:1.7;color:#374151}
+  #del-confirm-details strong{color:#111827}
+  #del-confirm-actions{display:flex;gap:10px;justify-content:center}
+  #del-confirm-cancel{padding:10px 24px;border-radius:9px;border:1.5px solid #e2e8f0;background:#f8fafc;color:#374151;font-size:14px;font-weight:600;cursor:pointer;transition:background .2s}
+  #del-confirm-cancel:hover{background:#e2e8f0}
+  #del-confirm-ok{padding:10px 24px;border-radius:9px;border:none;background:#ef4444;color:#fff;font-size:14px;font-weight:700;cursor:pointer;transition:background .2s}
+  #del-confirm-ok:hover{background:#dc2626}
+
   /* ── PRINT / PDF ─────────────────────────────── */
   /* O relatório PDF é gerado em nova janela via exportDashboardPDF() */
   #dash-pdf-header { display:none; }
@@ -2590,14 +2604,8 @@ function renderVRVTModal(){
     if(prevMap[f.id]&&prevMap[f.id].cleared){
       return{func:f,dVR:0,dVT:0,vru:f.vr||vru,vtu:f.vt||vtu,vr:0,vt:0,total:0,cleared:true};
     }
-    let d;
-    if(f.escala==='1236'){const sub=subEscalaMes(f.sub1236||'par',mes,ano);d=dias1236(ano,mes,sub);}
-    else if(f.escala==='6x1'){d=d6;}
-    else{d=du;}
     const rv=f.vr||vru, tv=f.vt||vtu;
-    const vrVal=f.semVR?0:d*rv;
-    const vtVal=f.semVT?0:d*tv;
-    return{func:f,dVR:f.semVR?0:d,dVT:f.semVT?0:d,vru:rv,vtu:tv,vr:vrVal,vt:vtVal,total:vrVal+vtVal,cleared:false};
+    return{func:f,dVR:0,dVT:0,vru:rv,vtu:tv,vr:0,vt:0,total:0,cleared:false};
   });
 
   $('mvc-tbody').innerHTML=mvcRows.map((r,i)=>{
@@ -2864,6 +2872,16 @@ function prevLanc(){
 async function saveEditLanc(){
   const id=$('ml-id').value;const idx=lancamentos.findIndex(x=>x.id===id);if(idx<0)return;
   const tipo=$('ml-tipo').value||'vrvt';
+  const l=lancamentos[idx];
+
+  // Trava de duplicata: verifica se já existe outro lançamento do mesmo func/tipo/mês/ano
+  const duplicata=lancamentos.find(x=>x.id!==id&&x.funcId===l.funcId&&(x.tipo||'vrvt')===(tipo||'vrvt')&&x.mes===l.mes&&x.ano===l.ano);
+  if(duplicata){
+    const tipoNome={vrvt:'VR e VT','5du':'5º Dia Útil',adt:'Adiantamento','13':'Décimo Terceiro',fer:'Férias',rec:'Rescisão'}[tipo]||tipo;
+    alert('⚠️ DUPLICATA DETECTADA\n\nJá existe um lançamento de '+tipoNome+' para '+l.funcNome+' em '+MESES[l.mes]+'/'+l.ano+'.\n\nExclua o duplicado antes de salvar.');
+    return;
+  }
+
   if(tipo==='vrvt'){
     const dVR=parseInt($('ml-dvr').value)||0,vru=parseFloat($('ml-uvr').value)||0;
     const dVT=parseInt($('ml-dvt').value)||0,vtu=parseFloat($('ml-uvt').value)||0;
@@ -2883,10 +2901,34 @@ async function saveEditLanc(){
   lsL();await fbSaveLanc(lancamentos[idx]);
   closeMo('mo-lanc');renderLanc();updateDash();toast('Lan\u00E7amento atualizado!');
 }
-async function delLanc(id){
-  if(!confirm('Remover lançamento?'))return;
+let _delPendingId=null;
+function delLanc(id){
+  const l=lancamentos.find(x=>x.id===id);
+  if(!l)return;
+  const tipoNome={vrvt:'VR e VT','5du':'5º Dia Útil',adt:'Adiantamento','13':'Décimo Terceiro',fer:'Férias',rec:'Rescisão'}[l.tipo||'vrvt']||l.tipo;
+  const periodo=MESES[l.mes]+'/'+l.ano;
+  _delPendingId=id;
+  const det=$('del-confirm-details');
+  if(det) det.innerHTML=
+    '<strong>Funcionário:</strong> '+l.funcNome+'<br>'+
+    '<strong>Tipo:</strong> '+tipoNome+'<br>'+
+    '<strong>Período:</strong> '+periodo+'<br>'+
+    '<strong>Valor:</strong> <span style="color:#ef4444;font-weight:800">'+fmt(l.total)+'</span><br>'+
+    '<br><span style="color:#b91c1c;font-size:12px">⚠️ Esta ação não pode ser desfeita.</span>';
+  const box=$('del-confirm');
+  if(box) box.classList.add('open');
+}
+function closeDelConfirm(){
+  _delPendingId=null;
+  const box=$('del-confirm');
+  if(box) box.classList.remove('open');
+}
+async function confirmDelLanc(){
+  if(!_delPendingId)return;
+  const id=_delPendingId;
+  closeDelConfirm();
   await deleteOneLanc(id);
-  renderLanc();updateDash();toast('Removido','d');
+  renderLanc();updateDash();toast('Lançamento excluído','d');
 }
 
 // ─── FOLHA DE PAGAMENTO ───────────────────────────────────────────────────────
@@ -2956,10 +2998,8 @@ function renderFolha(){
     if(_folhaAllData[f.id]) return {func:f,..._folhaAllData[f.id]};
     const salvo=lancamentos.find(l=>l.funcId===f.id&&l.mes===fp_mes&&l.ano===fp_ano&&l.tipo===folhaMode);
     if(salvo) return {func:f,salario:salvo.salario||0,comissao:salvo.comissao||0,outros:salvo.outros||0,multaRecisoria:salvo.multaRecisoria||0,recisaoFerias:salvo.recisaoFerias||0,avisoPrevio:salvo.avisoPrevio||0,total:salvo.total||0};
-    let salario=0;
-    if(folhaMode==='5du'||folhaMode==='13'||folhaMode==='fer') salario=f.salario||0;
-    else if(folhaMode==='adt') salario=f.adiantamento||0;
-    const total=salario;
+    const salario=0;
+    const total=0;
     return {func:f,salario,comissao:0,outros:0,total,multaRecisoria:0,recisaoFerias:0,avisoPrevio:0};
   }
 
@@ -3076,9 +3116,21 @@ async function salvarFolha(){
   const rowsParaSalvar=folhaRows.filter(r=>r.total>0);
   if(!rowsParaSalvar.length){alert('Informe ao menos um valor antes de salvar!');return;}
 
-  // Remove e substitui apenas os lançamentos dos funcionários visíveis
+  // Trava de duplicata: avisa se algum funcionário já tem lançamento no período
   const idsEditados=new Set(rowsParaSalvar.map(r=>r.func.id));
   const lancExistentes=lancamentos.filter(l=>l.mes===mes&&l.ano===ano&&l.tipo===folhaMode&&idsEditados.has(l.funcId));
+  if(lancExistentes.length){
+    const nomes=lancExistentes.map(l=>l.funcNome).join(', ');
+    const ok=confirm(
+      '⚠️ LANÇAMENTOS JÁ EXISTENTES\n\n'+
+      lancExistentes.length+' funcionário(s) já possuem lançamento de '+
+      (FOLHA_MODO_LABELS[folhaMode]||folhaMode)+' em '+MESES[mes]+'/'+ano+':\n\n'+
+      nomes+'\n\nDeseja SUBSTITUIR esses lançamentos?'
+    );
+    if(!ok)return;
+  }
+
+  // Remove e substitui apenas os lançamentos dos funcionários visíveis
   for(const l of lancExistentes){await fbDeleteLanc(l.id);}
   lancamentos=lancamentos.filter(l=>!(l.mes===mes&&l.ano===ano&&l.tipo===folhaMode&&idsEditados.has(l.funcId)));
 
@@ -3624,14 +3676,17 @@ async function saveEncargoBulk(){
 
 function editEncargo(id) {
   const e = encargos.find(x => x.id === id); if (!e) return;
-  // Abrir encargos tab e preencher bulk para o funcionário específico
+  // Abrir a aba encargos
   showTab('encargos', document.querySelector('.ni[onclick*="encargos"]'));
-  // Selecionar o mês/ano no bulk
+  // Selecionar o mês/ano e funcionário no bulk
   if($('enc-bulk-mes')) $('enc-bulk-mes').value=e.mes;
   if($('enc-bulk-ano')) $('enc-bulk-ano').value=e.ano;
   if($('enc-bulk-func-filt')) $('enc-bulk-func-filt').value=e.funcId;
+  // Zera o prevMap para forçar releitura dos dados salvos
+  encBulkRows=[];
   renderEncBulk();
   // Preencher os valores do encargo na linha do funcionário
+  // (renderEncBulk já carrega do array encargos — só sobrescreve no encBulkRows em memória)
   const idx=encBulkRows.findIndex(r=>r.func.id===e.funcId);
   if(idx>=0){
     encBulkRows[idx].fgts=e.fgts||0;
@@ -3641,21 +3696,48 @@ function editEncargo(id) {
     encBulkRows[idx].pens=e.pens||0;
     encBulkRows[idx].cesta=e.cesta||0;
     encBulkRows[idx].obs=e.obs||'';
-    // Remove from encargos so saveEncargoBulk won't duplicate
-    const existIdx=encargos.findIndex(x=>x.id===e.id);
-    if(existIdx>=0){encargos.splice(existIdx,1);lsE();fbDeleteEnc(e.id);}
+    // NÃO remove o encargo aqui — saveEncargoBulk cuida da substituição ao salvar
     renderEncBulk();
-    toast('✏️ Edite os valores e clique em Salvar Lançamentos','w');
+    // Rolar até o topo da seção bulk para o usuário ver o formulário
+    const bulkSection=document.getElementById('enc-bulk-section')||document.getElementById('tb-enc-bulk');
+    if(bulkSection) bulkSection.scrollIntoView({behavior:'smooth',block:'start'});
+    toast('✏️ Encargo carregado — edite os valores e clique em Salvar Lançamentos','w');
+  } else {
+    toast('⚠️ Funcionário não encontrado na lista ativa','d');
   }
 }
 
 
 
-async function deleteEncargo(id) {
-  if (!confirm('Remover este lançamento de encargo?')) return;
-  encargos = encargos.filter(e => e.id !== id);
+let _delEncPendingId=null;
+function deleteEncargo(id){
+  const e=encargos.find(x=>x.id===id);
+  if(!e)return;
+  _delEncPendingId=id;
+  const det=$('del-confirm-details');
+  if(det) det.innerHTML=
+    '<strong>Funcionário:</strong> '+e.funcNome+'<br>'+
+    '<strong>Período:</strong> '+MESES[e.mes]+'/'+e.ano+'<br>'+
+    '<strong>Valor total:</strong> <span style="color:#ef4444;font-weight:800">'+fmt(e.total||0)+'</span><br>'+
+    '<br><span style="color:#b91c1c;font-size:12px">⚠️ Esta ação não pode ser desfeita.</span>';
+  // Redireciona o botão OK do modal para a função correta
+  const okBtn=$('del-confirm-ok');
+  if(okBtn) okBtn.onclick=confirmDelEncargo;
+  const box=$('del-confirm');
+  if(box) box.classList.add('open');
+}
+async function confirmDelEncargo(){
+  if(!_delEncPendingId)return;
+  const id=_delEncPendingId;
+  _delEncPendingId=null;
+  const box=$('del-confirm');
+  if(box) box.classList.remove('open');
+  // Restaura o onclick padrão do botão OK
+  const okBtn=$('del-confirm-ok');
+  if(okBtn) okBtn.onclick=confirmDelLanc;
+  encargos=encargos.filter(e=>e.id!==id);
   lsE(); await fbDeleteEnc(id); renderEncargos(); updateDash();
-  toast('Encargo removido.', 'w');
+  toast('Encargo excluído.','d');
 }
 
 function renderEncargos() {
@@ -4831,6 +4913,18 @@ Deseja continuar?`)){e.target.value='';return;}
     <div id="save-popup-title">Lançamento Salvo!</div>
     <div id="save-popup-msg">Salvo com sucesso.</div>
     <button id="save-popup-ok" onclick="closeSavePopup()">OK</button>
+  </div>
+</div>
+<!-- DEL CONFIRM MODAL -->
+<div id="del-confirm">
+  <div id="del-confirm-box">
+    <div id="del-confirm-icon">🗑️</div>
+    <div id="del-confirm-title">Confirmar Exclusão</div>
+    <div id="del-confirm-details"></div>
+    <div id="del-confirm-actions">
+      <button id="del-confirm-cancel" onclick="closeDelConfirm()">Cancelar</button>
+      <button id="del-confirm-ok" onclick="confirmDelLanc()">Sim, excluir</button>
+    </div>
   </div>
 </div>
 </body>
