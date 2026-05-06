@@ -2372,6 +2372,7 @@ input:checked + .slider:before{transform:translateX(22px)}
       <button class="btn" style="background:#0891b2;color:#fff" onclick="saveComModal()">💾 Salvar Comissão</button>
     </div>
   </div>
+</div>
 
 
 <!-- MODAL EDITAR LANÇAMENTO -->
@@ -2672,6 +2673,7 @@ const MESES = ['','Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho',
 const fmt = v => 'R$ ' + (v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2);
 const $   = id => document.getElementById(id);
+
 
 // Status helpers
 function statusLabel(s){ return s==='ferias'?'🏖️ Férias':s==='inativo'?'❌ Inativo':'✅ Ativo'; }
@@ -3597,7 +3599,12 @@ function openEditLanc(id){
     $('ml-rec-fer').value=l.recisaoFerias||0;
     $('ml-rec-aviso').value=l.avisoPrevio||0;
   }
-  prevLanc();$('mo-lanc').classList.add('open');
+  prevLanc();
+  var _modal = document.getElementById('mo-lanc');
+  if(_modal){
+    _modal.removeAttribute('style');
+    _modal.classList.add('open');
+  }
 }
 function prevLanc(){
   const tipo=$('ml-tipo').value||'vrvt';
@@ -4098,8 +4105,15 @@ function updateDash(){
 }
 
 // ─── MODAL UTILS ──────────────────────────────────────────────────────────────
-function closeMo(id){$(id).classList.remove('open');}
-document.querySelectorAll('.mo').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');}));
+function closeMo(id){
+  var m=document.getElementById(id);
+  if(m){ m.removeAttribute('style'); m.classList.remove('open'); }
+}
+document.querySelectorAll('.mo').forEach(function(m){
+  m.addEventListener('click',function(e){
+    if(e.target===m){ m.removeAttribute('style'); m.classList.remove('open'); }
+  });
+});
 
 // ─── EXPORT HELPERS ──────────────────────────────────────────────────────────
 function fmtR(v){return'R$ '+(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});}
